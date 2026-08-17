@@ -18,7 +18,7 @@ El objetivo es desarrollar una aplicación web a partir de un dominio simple, ap
 
 ---
 
-## 📌 Introducción
+## Introducción
 
 
 
@@ -65,11 +65,11 @@ Cada tablero puede tener **cero, uno o múltiples subtableros**, permitiendo con
 
 ---
 
-## ⚙️ Instalación
+## Instalación
 Se debe clonar el repositorio y contar con una instalación previa de **go**.
 
 ---
 
-## 🚀 Despliegue
+## Despliegue
 
 Dentro de la carpeta raíz (la que contiene el archivo `main.go`), hay que ejecutar el comando `go run .` en la terminal.

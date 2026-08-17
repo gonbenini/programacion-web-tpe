@@ -72,4 +72,4 @@ Se debe clonar el repositorio y contar con una instalación previa de **go**.
 
 ## Despliegue
 
-Dentro de la carpeta raíz (la que contiene el archivo `main.go`), hay que ejecutar el comando `go run .` en la terminal.
+Dentro de la carpeta raíz (la que contiene el archivo `main.go`), hay que ejecutar el comando `go run main.go` en la terminal.

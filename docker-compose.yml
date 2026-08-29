@@ -1,0 +1,19 @@
+services:
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: foro
+      POSTGRES_USER: dbuser
+      POSTGRES_PASSWORD: dbpw
+    restart: unless-stopped
+
+  webserver:
+    image: golang:latest
+    working_dir: /app
+    volumes:
+      - ./ws:/app
+    ports:
+      - "8080:8080"
+    command: go run .
+    depends_on:
+      - db

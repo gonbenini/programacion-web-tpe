@@ -66,10 +66,10 @@ Cada tablero puede tener **cero, uno o múltiples subtableros**, permitiendo con
 ---
 
 ## Instalación
-Se debe clonar el repositorio y contar con una instalación previa de **go**.
+Se debe clonar el repositorio y contar con una instalación previa de **docker**, con el plugin **docker-compose** que habilite al comando `docker compose`.
 
 ---
 
 ## Despliegue
 
-Dentro de la carpeta raíz (la que contiene el archivo `main.go`), hay que ejecutar el comando `go run main.go` en la terminal.
+Dentro de la carpeta raíz (la que contiene el archivo `docker-compose.yml`), hay que ejecutar el comando `docker compose up` en la terminal.

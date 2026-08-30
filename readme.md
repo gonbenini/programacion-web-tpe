@@ -61,7 +61,7 @@ Cada tablero puede tener **cero, uno o múltiples subtableros**, permitiendo con
 - **Usuario:** `id_usuario`, `nombre`, `fecha_creacion`, `contrasenia`, `mail`
 - **Tablero:** `id_tablero`, `nombre`, `id_tablero_padre`, `descripcion`
 - **Discusión:** `nombre`, `id_usuario_creador`, `id_tablero`, `id_primer_mensaje`
-- **Mensaje:** `id_creador`, `id_respuesta_a_mensaje`, `texto`, `me_gusta`, `id_tablero`, `id_discusion`
+- **Mensaje:** `id_usuario`, `id_respuesta_a_mensaje`, `texto`, `me_gusta`, `id_discusion`
 
 ---
 

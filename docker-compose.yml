@@ -6,6 +6,8 @@ services:
       POSTGRES_USER: dbuser
       POSTGRES_PASSWORD: dbpw
     restart: unless-stopped
+    volumes:
+      - ./ws/db/schema/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql
 
   webserver:
     image: golang:latest

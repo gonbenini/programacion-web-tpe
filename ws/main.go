@@ -58,7 +58,7 @@ func main() {
 
 
 	//obtnemos todos los usuarios de la base de datos mediante la funcion generada por sqlc
-	getUsers, err := queries.GetUsers(ctx)
+	getUsers, err := queries.ListUsers(ctx)
 	if err != nil {
 		fmt.Printf("Error al obtener usuarios: %s\n", err)
 	}

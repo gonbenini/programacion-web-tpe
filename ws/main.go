@@ -32,16 +32,19 @@ func abrirDB() (*sql.DB, error) {
 }
 
 func main() {
-	//abrirDB() // Testea que abra la db
-	db, err := abrirDB() // en un futuro usamos esta linea para pasarle a los handles
+	// Testeamos que abra la db
+	db, err := abrirDB()
 	if err != nil {
 		fmt.Printf("Error al abrir la base de datos: %s\n", err)
 	}
+	//cerramos una vez terminada la ejecución del main
 	defer db.Close()
 
+	//realimos todo el acceso a la base a traves de la instancia queries
 	queries := sqlc.New(db)
 	ctx := context.Background()
 
+	//creamos un usuario mediante la tabla de parametros de creacion de usuario generada por sqlc
 	createdUser, err := queries.CreateUser(ctx,
 		sqlc.CreateUserParams{
 			Nombre:   "1",
@@ -50,19 +53,19 @@ func main() {
 	})
 	if err != nil {
 		fmt.Printf("Error al crear usuario: %s\n", err)
-		return
 	}
 	fmt.Printf("Usuario creado: %v\n", createdUser)
 
 
+	//obtnemos todos los usuarios de la base de datos mediante la funcion generada por sqlc
 	getUsers, err := queries.GetUsers(ctx)
-	#if err != nil {
+	if err != nil {
 		fmt.Printf("Error al obtener usuarios: %s\n", err)
-		return
 	}
 	fmt.Printf("Usuarios obtenidos: %v\n", getUsers)
-	
 
+	
+	//servidor web
 	staticDir := "./static"
 	fileServer := http.FileServer(http.Dir(staticDir))
 	port := ":8080"

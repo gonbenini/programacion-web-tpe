@@ -41,17 +41,43 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateU
 	return i, err
 }
 
+const deleteUser = `-- name: DeleteUser :exec
+DELETE FROM Usuario WHERE id_usuario = $1
+`
+
+func (q *Queries) DeleteUser(ctx context.Context, idUsuario int32) error {
+	_, err := q.db.ExecContext(ctx, deleteUser, idUsuario)
+	return err
+}
+
+const getUserById = `-- name: GetUserById :one
+SELECT nombre, mail
+FROM Usuario
+WHERE id_usuario = $1
+`
+
+type GetUserByIdRow struct {
+	Nombre string `json:"nombre"`
+	Mail   string `json:"mail"`
+}
+
+func (q *Queries) GetUserById(ctx context.Context, idUsuario int32) (GetUserByIdRow, error) {
+	row := q.db.QueryRowContext(ctx, getUserById, idUsuario)
+	var i GetUserByIdRow
+	err := row.Scan(&i.Nombre, &i.Mail)
+	return i, err
+}
+
 const listUsers = `-- name: ListUsers :many
-SELECT id_usuario, nombre, mail, fecha_creacion
+SELECT id_usuario, nombre, mail
 FROM Usuario
 ORDER BY id_usuario
 `
 
 type ListUsersRow struct {
-	IDUsuario     int32        `json:"id_usuario"`
-	Nombre        string       `json:"nombre"`
-	Mail          string       `json:"mail"`
-	FechaCreacion sql.NullTime `json:"fecha_creacion"`
+	IDUsuario int32  `json:"id_usuario"`
+	Nombre    string `json:"nombre"`
+	Mail      string `json:"mail"`
 }
 
 func (q *Queries) ListUsers(ctx context.Context) ([]ListUsersRow, error) {
@@ -63,12 +89,7 @@ func (q *Queries) ListUsers(ctx context.Context) ([]ListUsersRow, error) {
 	var items []ListUsersRow
 	for rows.Next() {
 		var i ListUsersRow
-		if err := rows.Scan(
-			&i.IDUsuario,
-			&i.Nombre,
-			&i.Mail,
-			&i.FechaCreacion,
-		); err != nil {
+		if err := rows.Scan(&i.IDUsuario, &i.Nombre, &i.Mail); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -80,4 +101,25 @@ func (q *Queries) ListUsers(ctx context.Context) ([]ListUsersRow, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateUser = `-- name: UpdateUser :exec
+UPDATE Usuario SET nombre = $2, mail = $3, contrasenia = $4 WHERE id_usuario = $1
+`
+
+type UpdateUserParams struct {
+	IDUsuario   int32  `json:"id_usuario"`
+	Nombre      string `json:"nombre"`
+	Mail        string `json:"mail"`
+	Contrasenia string `json:"contrasenia"`
+}
+
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
+	_, err := q.db.ExecContext(ctx, updateUser,
+		arg.IDUsuario,
+		arg.Nombre,
+		arg.Mail,
+		arg.Contrasenia,
+	)
+	return err
 }

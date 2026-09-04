@@ -44,7 +44,7 @@ func main() {
 	queries := sqlc.New(db)
 	ctx := context.Background()
 
-	
+
 	//creamos un usuario mediante la tabla de parametros de creacion de usuario generada por sqlc
 	createdUser, err := queries.CreateUser(ctx,
 		sqlc.CreateUserParams{
@@ -54,6 +54,7 @@ func main() {
 	})
 	if err != nil {
 		fmt.Printf("Error al crear usuario: %s\n", err)
+		RETUR
 	}
 	fmt.Printf("Usuario creado: %v\n", createdUser)
 
@@ -93,20 +94,5 @@ func main() {
 		fmt.Printf("Error al eliminar usuario: %s\n", err)
 	} else {
 		fmt.Println("Usuario eliminado correctamente")
-	}
-
-	
-	//servidor web
-	staticDir := "./static"
-	fileServer := http.FileServer(http.Dir(staticDir))
-	port := ":8080"
-
-	http.Handle("/", fileServer)
-	fmt.Printf("Servidor con formulario escuchando en http://localhost%s\n", port)
-
-	err = http.ListenAndServe(port, nil)
-
-	if err != nil {
-		fmt.Printf("Error: %s\n", err)
 	}
 }

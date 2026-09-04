@@ -48,8 +48,8 @@ func main() {
 	//creamos un usuario mediante la tabla de parametros de creacion de usuario generada por sqlc
 	createdUser, err := queries.CreateUser(ctx,
 		sqlc.CreateUserParams{
-			Nombre:   "1",
-			Mail: "John Doe",
+			Nombre:   "Alberto Gonzalez",
+			Mail: "alberto.gonzalez@example.com",
 			Contrasenia: "password123",
 	})
 	if err != nil {
@@ -67,7 +67,7 @@ func main() {
 
 
 	//obtenemos un usuario por id
-	getUser, err := queries.GetUserById(ctx, 1)
+	getUser, err := queries.GetUserById(ctx, createdUser.IDUsuario)
 	if err != nil {
 		fmt.Printf("Error al obtener usuario por ID: %s\n", err)
 	}
@@ -76,7 +76,7 @@ func main() {
 
 	//actualizamos un usuario por su id
 	err = queries.UpdateUser(ctx, sqlc.UpdateUserParams{
-		IDUsuario: 1,
+		IDUsuario: createdUser.IDUsuario,
 		Nombre:    "John Doe Updated",
 		Mail: "john.doe.updated@example.com",
 		Contrasenia: "newpassword123",
@@ -88,7 +88,7 @@ func main() {
 	}
 
 	//eliminamos un usuario por su id
-	err = queries.DeleteUser(ctx, 1)
+	err = queries.DeleteUser(ctx, createdUser.IDUsuario)
 	if err != nil {
 		fmt.Printf("Error al eliminar usuario: %s\n", err)
 	} else {

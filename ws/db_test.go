@@ -1,6 +1,9 @@
 package main
 import (
 	"testing"
+	"context"
+	_ "github.com/lib/pq"
+	sqlc "foro/db/sqlc"
 )
 
 func TestDBusers(t *testing.T) {

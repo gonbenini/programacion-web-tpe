@@ -16,6 +16,6 @@ services:
       - ./ws:/app
     ports:
       - "8080:8080"
-    command: go run .
+    command: sh -c "go test -v ./... && go run main.go"
     depends_on:
       - db

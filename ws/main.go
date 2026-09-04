@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"net/http"
+	//"net/http"
 
 	_ "github.com/lib/pq"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -54,7 +54,6 @@ func main() {
 	})
 	if err != nil {
 		fmt.Printf("Error al crear usuario: %s\n", err)
-		RETUR
 	}
 	fmt.Printf("Usuario creado: %v\n", createdUser)
 

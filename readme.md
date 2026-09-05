@@ -65,8 +65,16 @@ Cada tablero puede tener **cero, uno o múltiples subtableros**, permitiendo con
 
 ---
 
-## Instalación
-Se debe clonar el repositorio y contar con una instalación previa de **docker**, con el plugin **docker-compose** que habilite al comando `docker compose`.
+## Instancia de la app
+
+Tenemos la arquitectura definida en el archivo `docker-compose.up`.  
+Para el despliegue usamos la herramienta `Makefile`, en esta definimos comandos para operar la app. Siendo operar tareas como mantener, gestionar o desplegar la app segun los comandos que definimos.
+
+---
+
+## Requisitos
+Se debe clonar el repositorio y contar con una instalación previa de **docker**, con el plugin **docker-compose** que habilite al comando `docker compose`.  
+Ademas se debe contar con los puertos `8080` y `5432` libres.
 
 ---
 

@@ -80,4 +80,4 @@ Ademas se debe contar con los puertos `8080` y `5432` libres.
 
 ## Despliegue
 
-Dentro de la carpeta raíz (la que contiene el archivo `docker-compose.yml`), hay que ejecutar el comando `docker compose up` en la terminal.
+Dentro de la carpeta raíz (la que contiene el archivo `docker-compose.yml` y `Makefile`), hay que ejecutar el comando `make up` en la terminal.

@@ -65,7 +65,6 @@ func main() {
 	}
 	fmt.Printf("Usuarios obtenidos: %v\n", getUsers)
 
-
 	//obtenemos un usuario por id
 	getUser, err := queries.GetUserById(ctx, createdUser.IDUsuario)
 	if err != nil {
@@ -73,7 +72,7 @@ func main() {
 	}
 	fmt.Printf("Usuario obtenido por ID: %v\n", getUser)
 
-
+	
 	//actualizamos un usuario por su id
 	err = queries.UpdateUser(ctx, sqlc.UpdateUserParams{
 		IDUsuario: createdUser.IDUsuario,
@@ -86,6 +85,7 @@ func main() {
 	} else {
 		fmt.Println("Usuario actualizado correctamente")
 	}
+	
 
 	//eliminamos un usuario por su id
 	err = queries.DeleteUser(ctx, createdUser.IDUsuario)

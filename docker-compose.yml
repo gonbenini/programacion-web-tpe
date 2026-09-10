@@ -8,6 +8,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./ws/db/schema/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql
+      - posdata:/var/lib/postgresql
 
   webserver:
     image: golang:latest
@@ -19,3 +20,6 @@ services:
     command: sh -c "go test -v ./... && go run main.go"
     depends_on:
       - db
+
+volumes:
+  posdata:

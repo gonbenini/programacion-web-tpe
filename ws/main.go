@@ -1,14 +1,14 @@
 package main
 
 import (
-	"context"
+	//"context"
 	"database/sql"
 	"fmt"
 	"net/http"
 
 	_ "github.com/lib/pq"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	sqlc "foro/db/sqlc"
+	//sqlc "foro/db/sqlc"
 )
 
 func abrirDB() (*sql.DB, error) {
@@ -41,8 +41,8 @@ func main() {
 	defer db.Close()
 
 	//realimos todo el acceso a la base a traves de la instancia queries
-	queries := sqlc.New(db)
-	ctx := context.Background()
+	//queries := sqlc.New(db)
+	//ctx := context.Background()
 
 	
 	

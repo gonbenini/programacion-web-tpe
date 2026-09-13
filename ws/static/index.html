@@ -3,14 +3,18 @@
 		<head><title>Contacto</title></head>
 		<body>
 			<h2>Login</h2>
-			<form action="/" method="POST">
+			<form action="/register" method="POST">
 				<label>Nombre:</label>
 				<input type="text" name="nombre"><br>
 				<label>mail:</label>
 				<input type="email" name="mail"><br>
-				<label>Mensaje:</label>
-				<input type="text" name="mensaje"><br>
+				<label>contrasenia:</label>
+				<input type="password" name="contrasenia"><br>
 				<button type="submit">Enviar</button>
 			</form>
+
+            <button onclick="window.location.href='/usuarios';">Ver usuarios</button>
+            <p id="mensaje-alerta"></p>
+            <script src="index.js"></script>
 		</body>
 	</html>`

@@ -1,10 +1,10 @@
 const formulario = document.querySelector('form');
 const mensajePantalla = document.querySelector('#mensaje-alerta');
 
+// Función que recibe el mensaje del servidor e imprime un mensaje con contenido HTML.
 formulario.addEventListener('submit', async (event) => {
   event.preventDefault(); 
 
-  // 1. Envolvemos FormData en URLSearchParams para que Go pueda leerlo
   const datosFormulario = new URLSearchParams(new FormData(formulario));
 
   try {
@@ -15,7 +15,6 @@ formulario.addEventListener('submit', async (event) => {
 
     const resultado = await respuesta.json();
 
-    // 2. Cambiamos a resultado.Mensaje (con M mayúscula) coincidiendo con Go
     mensajePantalla.textContent = resultado.mensaje;
     mensajePantalla.style.color = "green"; 
 

@@ -1,8 +1,8 @@
 version: "2"
 sql:
   - engine: "postgresql"
-    queries: "./db/queries/"
-    schema: "./db/schema/"
+    queries: "./db/queries/" #ubicacion donde se encuentra nuestras queries en SQL
+    schema: "./db/schema/" #ubicacion donde se encuentra nuestro esquema
     gen:
       go:
         package: "db"

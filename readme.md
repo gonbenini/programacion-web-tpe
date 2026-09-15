@@ -163,3 +163,9 @@ Además se debe contar con los puertos `8080` y `5432` libres.
 ## Despliegue
 
 Dentro de la carpeta raíz (la que contiene el archivo `docker-compose.yml` y `Makefile`), hay que ejecutar el comando `make up` en la terminal.
+
+---
+
+## Testeo
+
+Dentro de la carpeta raíz (la que contiene el archivo `docker-compose.yml` y `Makefile`), hay que ejecutar el comando `make test` en la terminal.

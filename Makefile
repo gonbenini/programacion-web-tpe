@@ -21,5 +21,14 @@ down:
 
 # 4. 	Elimina los archivos autogenerados para limpiar el proyecto local, la idea es borrar todos los assets generados.
 clean:
-	rm -f ws/db/sqlc/*.go
+	sudo rm -f ws/db/sqlc/*.go
 	#  tambien podria ser implementado como un comando de git para resetear a como viene el la carpeta pero perderiamos codigo que estemos desarrollando en vez de solo los assets generados por la instancia.
+
+# 5.    Ejecuta los tests.
+test: generate
+	docker compose run --rm webserver go test -v ./
+	# Usamos 'docker compose run' para levantar un contenedor efímero basado en la configuración de 'webserver'.
+	# Como 'webserver' depende de 'db' (depends_on), Docker Compose se asegurará de que la BD esté levantada antes de correr los tests.
+	# Al usar --rm, el contenedor efímero donde corrieron los tests se elimina automáticamente al terminar.
+	# Respecto al comando `go test -v ./`, es una herramienta nativa de go que ejecuta los test.
+	# Lo que hace es buscar archivos cuyos nombres terminen en _test.go y ejecuta las funciones que tenga. -v es verbose, el primer `./` es para que empiece a buscar de la carpeta actual.

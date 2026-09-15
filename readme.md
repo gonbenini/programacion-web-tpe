@@ -2,10 +2,10 @@
 
 <p align="center">
   <strong>Ingeniería de Sistemas · UNICEN</strong><br>
-  Trabajo Práctico Especial de la cursada de Programación Web
-  Benini Gonzalo David
-  Lozano Francisco
-  Rezola Tomas Ezequiel
+  Trabajo Práctico Especial de la cursada de Programación Web<br>
+  Benini Gonzalo David<br>
+  Lozano Francisco<br>
+  Rezola Tomas Ezequiel<br>
 </p>
 
 Este repositorio corresponde al Trabajo Práctico Especial de la cursada de Programación Web de la carrera de Ingeniería de Sistemas de la UNICEN.

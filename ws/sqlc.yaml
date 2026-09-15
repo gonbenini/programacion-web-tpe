@@ -1,0 +1,10 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    queries: "./db/queries/" #ubicacion donde se encuentra nuestras queries en SQL
+    schema: "./db/schema/" #ubicacion donde se encuentra nuestro esquema
+    gen:
+      go:
+        package: "db"
+        out: "./db/sqlc/" #salida donde se generaran los archivos de sqlc
+        emit_json_tags: true

@@ -3,6 +3,9 @@
 <p align="center">
   <strong>Ingeniería de Sistemas · UNICEN</strong><br>
   Trabajo Práctico Especial de la cursada de Programación Web
+  Benini Gonzalo David
+  Lozano Francisco
+  Rezola Tomas Ezequiel
 </p>
 
 Este repositorio corresponde al Trabajo Práctico Especial de la cursada de Programación Web de la carrera de Ingeniería de Sistemas de la UNICEN.
@@ -99,7 +102,7 @@ A través de `sqlc`, se implementaron las siguientes operaciones sobre la entida
 
 ---
 
-## Funcionalidades Básicas del Sistema
+## Funcionalidades Básicas del Sistema - Interaccion con webservice
 
 El servidor expone endpoints básicos para la interacción con la interfaz de usuario, conectando el frontend con la base de datos mediante la capa generada por `sqlc`.
 

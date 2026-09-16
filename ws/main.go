@@ -2,18 +2,19 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
-	_ "github.com/lib/pq"
-	_ "github.com/jackc/pgx/v5/stdlib"
 	sqlc "foro/db/sqlc"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
+	_ "github.com/lib/pq"
 )
 
 type Respuesta struct {
-    Mensaje string `json:"mensaje"`
+	Mensaje string `json:"mensaje"`
 }
 
 func abrirDB() (*sql.DB, error) {
@@ -36,8 +37,7 @@ func abrirDB() (*sql.DB, error) {
 	return db, nil
 }
 
-func handleUsuarios(w http.ResponseWriter, r *http.Request, db *sql.DB) {
-	queries := sqlc.New(db)
+func handleUsuarios(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
 	ctx := context.Background()
 
 	if r.URL.Path != "/usuarios" {
@@ -59,46 +59,45 @@ func handleUsuarios(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	fmt.Fprintf(w, "</ul></body></html>")
 }
 
-func handleRegister(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+func handleRegister(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
 
-	queries := sqlc.New(db)
 	ctx := context.Background()
 	if r.URL.Path != "/register" {
-			http.NotFound(w, r)
-			return
+		http.NotFound(w, r)
+		return
 	}
-		
-		//1. Parsear los datos del formulario (¡Crucial!)
-		if err := r.ParseForm(); err != nil {
-			http.Error(w, "Error al parsear", http.StatusBadRequest)
-			return
-		}
-		username := r.FormValue("nombre")
-		mail := r.FormValue("mail")
-		password := r.FormValue("contrasenia")
-		
-		createdUser, err := queries.CreateUser(ctx,
-			sqlc.CreateUserParams{
-				Nombre:      username,
-				Mail:        mail,
-				Contrasenia: password,
+
+	//1. Parsear los datos del formulario (¡Crucial!)
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Error al parsear", http.StatusBadRequest)
+		return
+	}
+	username := r.FormValue("nombre")
+	mail := r.FormValue("mail")
+	password := r.FormValue("contrasenia")
+
+	createdUser, err := queries.CreateUser(ctx,
+		sqlc.CreateUserParams{
+			Nombre:      username,
+			Mail:        mail,
+			Contrasenia: password,
 		})
-		if err != nil {
-			fmt.Printf("Error al crear usuario: %s\n", err)
-			return
-		}
-		fmt.Printf("Usuario creado: %v\n", createdUser)
+	if err != nil {
+		fmt.Printf("Error al crear usuario: %s\n", err)
+		return
+	}
+	fmt.Printf("Usuario creado: %v\n", createdUser)
 
-		// 1. Configuramos la cabecera para responder en formato JSON
-    w.Header().Set("Content-Type", "application/json")
+	// 1. Configuramos la cabecera para responder en formato JSON
+	w.Header().Set("Content-Type", "application/json")
 
-    // 2. Creamos la respuesta de éxito
-    respuestaExito := Respuesta{
-        Mensaje: "Se envió correctamente",
-    }
+	// 2. Creamos la respuesta de éxito
+	respuestaExito := Respuesta{
+		Mensaje: "Se envió correctamente",
+	}
 
-    // 3. Enviamos el JSON de vuelta a JavaScript
-    json.NewEncoder(w).Encode(respuestaExito)
+	// 3. Enviamos el JSON de vuelta a JavaScript
+	json.NewEncoder(w).Encode(respuestaExito)
 }
 
 func main() {
@@ -109,20 +108,22 @@ func main() {
 	}
 	//cerramos una vez terminada la ejecución del main
 	defer db.Close()
-	
+
+	queries := sqlc.New(db)
+
 	staticDir := "./static"
 	fileServer := http.FileServer(http.Dir(staticDir))
 	port := ":8080"
 
 	http.Handle("/", fileServer)
 	http.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
-		handleRegister(w, r, db)
+		handleRegister(w, r, queries)
 	})
 	http.HandleFunc("/usuarios", func(w http.ResponseWriter, r *http.Request) {
-		handleUsuarios(w, r, db)
+		handleUsuarios(w, r, queries)
 	})
 	fmt.Printf("Servidor con formulario escuchando en http://localhost%s\n", port)
-	
+
 	err = http.ListenAndServe(port, nil)
 
 	if err != nil {

@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	sqlc "foro/db/sqlc"
+	"foro/logic"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	_ "github.com/lib/pq"
@@ -67,7 +68,7 @@ func handleRegister(w http.ResponseWriter, r *http.Request, queries *sqlc.Querie
 		return
 	}
 
-	//1. Parsear los datos del formulario (¡Crucial!)
+	//1. Parsear los datos del formulario
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "Error al parsear", http.StatusBadRequest)
 		return
@@ -100,6 +101,48 @@ func handleRegister(w http.ResponseWriter, r *http.Request, queries *sqlc.Querie
 	json.NewEncoder(w).Encode(respuestaExito)
 }
 
+func usuariosAPIHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
+	switch r.Method {
+	case http.MethodPost:
+		createUsuario(w, r, queries)
+	default:
+		http.Error(w, "Metodo no permitido", http.StatusMethodNotAllowed)
+	}
+}
+
+func createUsuario(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
+	var req logic.NuevoUsuario
+
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, "Error al procesar JSON", http.StatusBadRequest)
+		return
+	}
+
+	err = logic.ValidarUsuario(req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	ctx := context.Background()
+	createdUser, err := queries.CreateUser(ctx,
+		sqlc.CreateUserParams{
+			Nombre:      req.Nombre,
+			Mail:        req.Mail,
+			Contrasenia: req.Contrasenia,
+		})
+	if err != nil {
+		fmt.Printf("Error al crear usuario: %s\n", err)
+		http.Error(w, "Error interno", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(createdUser)
+}
+
 func main() {
 	// Testeamos que abra la db
 	db, err := abrirDB()
@@ -122,6 +165,11 @@ func main() {
 	http.HandleFunc("/usuarios", func(w http.ResponseWriter, r *http.Request) {
 		handleUsuarios(w, r, queries)
 	})
+
+	http.HandleFunc("/api/usuarios", func(w http.ResponseWriter, r *http.Request) {
+		usuariosAPIHandler(w, r, queries)
+	})
+
 	fmt.Printf("Servidor con formulario escuchando en http://localhost%s\n", port)
 
 	err = http.ListenAndServe(port, nil)

@@ -171,4 +171,9 @@ Dentro de la carpeta raíz (la que contiene el archivo `docker-compose.yml` y `M
 
 ## Testeo
 
+
+### Testeo persistencia
 Dentro de la carpeta raíz (la que contiene el archivo `docker-compose.yml` y `Makefile`), hay que ejecutar el comando `make test` en la terminal.
+
+### Testeo api
+Dentro de la carpeta raíz (la que contiene el archivo `docker-compose.yml` y `Makefile`), hay que ejecutar el comando `make up` en la terminal. Una vez que el contenedor este funcionando, correr el script `requests.sh`

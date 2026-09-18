@@ -103,15 +103,44 @@ func handleRegister(w http.ResponseWriter, r *http.Request, queries *sqlc.Querie
 
 func usuariosAPIHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
 	switch r.Method {
-	case http.MethodPost:
-		createUsuario(w, r, queries)
-	default:
-		http.Error(w, "Metodo no permitido", http.StatusMethodNotAllowed)
+		case http.MethodPost:
+			createUsuario(w, r, queries)
+		
+		case http.MethodGet:
+			getUsuarios(w, r, queries)
+
+		default:
+			http.Error(w, "Metodo no permitido", http.StatusMethodNotAllowed)
 	}
 }
 
 func usuarioAPIHandler(w http.ResponseWriter, r * http.Request, queries *sqlc.Queries) {
-	
+	//extraer ID del path
+	parts := strings.Split(r.URL.Path, "/")
+	if len(parts) != 3 {
+		http.Error(w, "URL invalido", http.StatusBadRequest)
+		return
+	}
+
+	id, err := strconv.Atoi(parts[2])
+	if err != {
+		http.Error(w, "Invalid product ID", http.StatusBadRequest)
+		return
+	}
+
+	switch r.Method {
+		case http.MethodGet:
+			getUsuario(w, r, id)
+		
+		case http.MethodPut:
+			updateUsuario(w, r, id)
+		
+		case http.MethodDelete(w, r, id)
+			deleteUsuario(w, r, id)
+		
+		default
+			http.Error(w, "Metodo no permitido", http.StatusMethodNotAllowed)	
+	}
 }
 
 func createUsuario(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
@@ -175,7 +204,7 @@ func main() {
 	})
 
 	http.HandleFunc("/api/usuarios/", func(w http.ResponseWriter, r *http.Request) {
-		usuariosAPIHandler(w, r, queries)
+		usuarioAPIHandler(w, r, queries)
 	})
 
 	fmt.Printf("Servidor con formulario escuchando en http://localhost%s\n", port)

@@ -176,6 +176,22 @@ func createUsuario(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries
 	json.NewEncoder(w).Encode(createdUser)
 }
 
+func getUsuarios(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
+
+}
+
+func getUsuario(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
+
+}
+
+func updateUsuario(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
+
+}
+
+func deleteUsuario(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
+
+}
+
 func main() {
 	// Testeamos que abra la db
 	db, err := abrirDB()

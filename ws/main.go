@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
+	"strconv"
 
 	sqlc "foro/db/sqlc"
 	"foro/logic"
@@ -123,22 +125,22 @@ func usuarioAPIHandler(w http.ResponseWriter, r * http.Request, queries *sqlc.Qu
 	}
 
 	id, err := strconv.Atoi(parts[2])
-	if err != {
+	if err != nil {
 		http.Error(w, "Invalid product ID", http.StatusBadRequest)
 		return
 	}
 
 	switch r.Method {
 		case http.MethodGet:
-			getUsuario(w, r, id)
+			getUsuario(w, r, queries, id)
 		
 		case http.MethodPut:
-			updateUsuario(w, r, id)
+			updateUsuario(w, r, queries, id)
 		
-		case http.MethodDelete(w, r, id)
-			deleteUsuario(w, r, id)
+		case http.MethodDelete:
+			deleteUsuario(w, r, queries, id)
 		
-		default
+		default:
 			http.Error(w, "Metodo no permitido", http.StatusMethodNotAllowed)	
 	}
 }
@@ -180,15 +182,15 @@ func getUsuarios(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) 
 
 }
 
-func getUsuario(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
+func getUsuario(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries, id int) {
 
 }
 
-func updateUsuario(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
+func updateUsuario(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries, id int) {
 
 }
 
-func deleteUsuario(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
+func deleteUsuario(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries, id int) {
 
 }
 

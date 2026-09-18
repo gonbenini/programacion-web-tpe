@@ -110,6 +110,10 @@ func usuariosAPIHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Qu
 	}
 }
 
+func usuarioAPIHandler(w http.ResponseWriter, r * http.Request, queries *sqlc.Queries) {
+	
+}
+
 func createUsuario(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
 	var req logic.NuevoUsuario
 
@@ -165,8 +169,12 @@ func main() {
 	http.HandleFunc("/usuarios", func(w http.ResponseWriter, r *http.Request) {
 		handleUsuarios(w, r, queries)
 	})
-
+	
 	http.HandleFunc("/api/usuarios", func(w http.ResponseWriter, r *http.Request) {
+		usuariosAPIHandler(w, r, queries)
+	})
+
+	http.HandleFunc("/api/usuarios/", func(w http.ResponseWriter, r *http.Request) {
 		usuariosAPIHandler(w, r, queries)
 	})
 

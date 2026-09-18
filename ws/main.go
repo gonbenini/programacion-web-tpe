@@ -191,7 +191,12 @@ func updateUsuario(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries
 }
 
 func deleteUsuario(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries, id int) {
+	err = queries.DeleteUser(ctx, createdUser.IDUsuario)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+	}
 
+	w.writeHeader(http.StatusNoContent)
 }
 
 func main() {

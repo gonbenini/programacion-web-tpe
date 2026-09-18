@@ -119,12 +119,12 @@ func usuariosAPIHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Qu
 func usuarioAPIHandler(w http.ResponseWriter, r * http.Request, queries *sqlc.Queries) {
 	//extraer ID del path
 	parts := strings.Split(r.URL.Path, "/")
-	if len(parts) != 3 {
+	if len(parts) != 4 {
 		http.Error(w, "URL invalido", http.StatusBadRequest)
 		return
 	}
 
-	id, err := strconv.Atoi(parts[2])
+	id, err := strconv.Atoi(parts[3])
 	if err != nil {
 		http.Error(w, "Invalid product ID", http.StatusBadRequest)
 		return
@@ -132,13 +132,13 @@ func usuarioAPIHandler(w http.ResponseWriter, r * http.Request, queries *sqlc.Qu
 
 	switch r.Method {
 		case http.MethodGet:
-			getUsuario(w, r, queries, id)
+			getUsuario(w, r, queries, int32(id))
 		
 		case http.MethodPut:
-			updateUsuario(w, r, queries, id)
+			updateUsuario(w, r, queries, int32(id))
 		
 		case http.MethodDelete:
-			deleteUsuario(w, r, queries, id)
+			deleteUsuario(w, r, queries, int32(id))
 		
 		default:
 			http.Error(w, "Metodo no permitido", http.StatusMethodNotAllowed)	
@@ -182,21 +182,23 @@ func getUsuarios(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) 
 
 }
 
-func getUsuario(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries, id int) {
+func getUsuario(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries, id int32) {
 
 }
 
-func updateUsuario(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries, id int) {
+func updateUsuario(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries, id int32) {
 
 }
 
-func deleteUsuario(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries, id int) {
-	err = queries.DeleteUser(ctx, createdUser.IDUsuario)
+func deleteUsuario(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries, id int32) {
+	ctx := context.Background()
+	err := queries.DeleteUser(ctx, id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
+		return
 	}
 
-	w.writeHeader(http.StatusNoContent)
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func main() {

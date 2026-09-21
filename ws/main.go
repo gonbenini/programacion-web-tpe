@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 	"strconv"
+	"strings"
 
 	sqlc "foro/db/sqlc"
 	"foro/logic"
@@ -105,18 +105,18 @@ func handleRegister(w http.ResponseWriter, r *http.Request, queries *sqlc.Querie
 
 func usuariosAPIHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
 	switch r.Method {
-		case http.MethodPost:
-			createUsuario(w, r, queries)
-		
-		case http.MethodGet:
-			getUsuarios(w, r, queries)
+	case http.MethodPost:
+		createUsuario(w, r, queries)
 
-		default:
-			http.Error(w, "Metodo no permitido", http.StatusMethodNotAllowed)
+	case http.MethodGet:
+		getUsuarios(w, r, queries)
+
+	default:
+		http.Error(w, "Metodo no permitido", http.StatusMethodNotAllowed)
 	}
 }
 
-func usuarioAPIHandler(w http.ResponseWriter, r * http.Request, queries *sqlc.Queries) {
+func usuarioAPIHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
 	//extraer ID del path
 	parts := strings.Split(r.URL.Path, "/")
 	if len(parts) != 4 {
@@ -126,22 +126,22 @@ func usuarioAPIHandler(w http.ResponseWriter, r * http.Request, queries *sqlc.Qu
 
 	id, err := strconv.Atoi(parts[3])
 	if err != nil {
-		http.Error(w, "Invalid product ID", http.StatusBadRequest)
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
 
 	switch r.Method {
-		case http.MethodGet:
-			getUsuario(w, r, queries, int32(id))
-		
-		case http.MethodPut:
-			updateUsuario(w, r, queries, int32(id))
-		
-		case http.MethodDelete:
-			deleteUsuario(w, r, queries, int32(id))
-		
-		default:
-			http.Error(w, "Metodo no permitido", http.StatusMethodNotAllowed)	
+	case http.MethodGet:
+		getUsuario(w, r, queries, int32(id))
+
+	case http.MethodPut:
+		updateUsuario(w, r, queries, int32(id))
+
+	case http.MethodDelete:
+		deleteUsuario(w, r, queries, int32(id))
+
+	default:
+		http.Error(w, "Metodo no permitido", http.StatusMethodNotAllowed)
 	}
 }
 
@@ -179,11 +179,29 @@ func createUsuario(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries
 }
 
 func getUsuarios(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
+	ctx := context.Background()
 
+	users, err := queries.ListUsers(ctx) // Buscamos todos los registros de usuario
+	if err != nil {
+		http.Error(w, "Error al listar usuarios", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json") // devolvemos array JSON
+	json.NewEncoder(w).Encode(users)
 }
 
 func getUsuario(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries, id int32) {
+	ctx := context.Background()
 
+	user, err := queries.GetUserById(ctx, id) // Buscamos el registro
+	if err != nil {
+		http.Error(w, "Usuario no encontrado", http.StatusNotFound) // Si no existe devolvemos un 404 Not Found
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json") // devolvemos JSON con estado 200
+	json.NewEncoder(w).Encode(user)
 }
 
 func updateUsuario(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries, id int32) {
@@ -223,7 +241,7 @@ func main() {
 	http.HandleFunc("/usuarios", func(w http.ResponseWriter, r *http.Request) {
 		handleUsuarios(w, r, queries)
 	})
-	
+
 	http.HandleFunc("/api/usuarios", func(w http.ResponseWriter, r *http.Request) {
 		usuariosAPIHandler(w, r, queries)
 	})

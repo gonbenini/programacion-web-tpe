@@ -1,1 +1,1 @@
-./internal/db/sqlc/*.go
+internal/db/sqlc/*.go

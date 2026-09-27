@@ -1,4 +1,4 @@
-package controller
+package handlers
 
 import (
 	"context"
@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	sqlc "foro/db/sqlc"
-	"foro/logic"
+	sqlc "foro/internal/db/sqlc"
+	"foro/internal/logic"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	_ "github.com/lib/pq"

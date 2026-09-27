@@ -7,17 +7,17 @@ services:
       POSTGRES_PASSWORD: dbpw
     restart: unless-stopped
     volumes:
-      - ./ws/db/schema/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql
+      - ./internal/db/schema/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql
       - posdata:/var/lib/postgresql
 
   webserver:
     image: golang:latest
     working_dir: /app
     volumes:
-      - ./ws:/app
+      - ./:/app
     ports:
       - "8080:8080"
-    command: go run main.go
+    command: go run ./cmd/server/main.go
     depends_on:
       - db
 

@@ -1,61 +1,41 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"net/http"
 
-	sqlc "foro/db/sqlc"
+	"foro/internal/db"
+	"foro/internal/handlers"
 
-	"foro/controller"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	_ "github.com/lib/pq"
+	sqlc "foro/internal/db/sqlc"
 )
 
 type Respuesta struct {
 	Mensaje string `json:"mensaje"`
 }
 
-func abrirDB() (*sql.DB, error) {
-	db, err := sql.Open(
-		"postgres",
-		"postgres://dbuser:dbpw@db:5432/foro?sslmode=disable",
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	// Verifica que la base de datos responda
-	if err := db.Ping(); err != nil {
-		return nil, err
-	}
-
-	// Configura el tamaño máximo del pool
-	db.SetMaxOpenConns(25)
-
-	return db, nil
-}
-
 func main() {
 	// Testeamos que abra la db
-	db, err := abrirDB()
+	db_conecction, err := db.AbrirDB()
 	if err != nil {
 		fmt.Printf("Error al abrir la base de datos: %s\n", err)
 	}
 	//cerramos una vez terminada la ejecución del main
-	defer db.Close()
+	defer db_conecction.Close()
 
-	queries := sqlc.New(db)
+	queries := sqlc.New(db_conecction)
 
 	port := ":8080"
 
 	http.HandleFunc("/api/usuarios", func(w http.ResponseWriter, r *http.Request) {
-		controller.UsuariosAPIHandler(w, r, queries)
+		handlers.UsuariosAPIHandler(w, r, queries)
 	})
 
 	http.HandleFunc("/api/usuarios/", func(w http.ResponseWriter, r *http.Request) {
-		controller.UsuarioAPIHandler(w, r, queries)
+		handlers.UsuarioAPIHandler(w, r, queries)
 	})
 
 	fmt.Printf("Servidor con formulario escuchando en http://localhost%s\n", port)

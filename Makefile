@@ -3,7 +3,7 @@
 
 # 1.	Genera el código de Go leyendo el schema y queries antes de que Docker Compose se levante, los contenedores dependen de estos assets.
 generate:
-	@docker run --rm -v "$(shell pwd)/ws:/src" -w /src sqlc/sqlc generate >/dev/null
+	@docker run --rm -v "$(shell pwd):/src" -w /src sqlc/sqlc generate >/dev/null
 # --rm (remove): docker borra el contenedor en cuanto termina de ejecutar el comando.
 # -v (mapear volumen): pasamos codigo que queremos ejecutar adentro del contenedor.
 # -w /src (workdir): carpeta donde estara parada la terminal cuando empiece a ejecutar el contendor, no es necesario pero facilita ubicarnos.
@@ -22,12 +22,12 @@ down:
 
 # 4. 	Elimina los archivos autogenerados para limpiar el proyecto local, la idea es borrar todos los assets generados.
 clean:
-	sudo rm -f ws/db/sqlc/*.go
+	sudo rm -f internal/db/sqlc/*.go
 #  tambien podria ser implementado como un comando de git para resetear a como viene el la carpeta pero perderiamos codigo que estemos desarrollando en vez de solo los assets generados por la instancia.
 
 # 5.    Ejecuta los tests.
 test: generate
-	docker compose run --rm webserver go test -v ./
+	docker compose run --rm webserver go test -v ./internal/db
 # Usamos 'docker compose run' para levantar un contenedor efímero basado en la configuración de 'webserver'.
 # Como 'webserver' depende de 'db' (depends_on), Docker Compose se asegurará de que la BD esté levantada antes de correr los tests.
 # Al usar --rm, el contenedor efímero donde corrieron los tests se elimina automáticamente al terminar.

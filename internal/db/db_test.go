@@ -1,15 +1,14 @@
-package main
+package db
 import (
 	"testing"
 	"context"
-	_ "github.com/lib/pq"
-	sqlc "foro/db/sqlc"
+	sqlc "foro/internal/db/sqlc"
 )
 
 func TestDBusers(t *testing.T) {
 
 	//1. abrimos conexcion con la DB.
-	db ,err := abrirDB()
+	db ,err := AbrirDB()
 	if err != nil {
 		t.Fatalf("Error al abrir la base de datos: %s\n", err)
 	}

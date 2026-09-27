@@ -160,6 +160,7 @@ Para el despliegue usamos la herramienta `Makefile`, en esta definimos comandos 
 
 Se debe clonar el repositorio y contar con una instalación previa de **Docker**, con el plugin **docker-compose** que habilite al comando `docker compose`.  
 Además se debe contar con los puertos `8080` y `5432` libres.
+Se debe poder usar el comando `curl`
 
 ---
 
@@ -176,4 +177,4 @@ Dentro de la carpeta raíz (la que contiene el archivo `docker-compose.yml` y `M
 Dentro de la carpeta raíz (la que contiene el archivo `docker-compose.yml` y `Makefile`), hay que ejecutar el comando `make test` en la terminal.
 
 ### Testeo api
-Dentro de la carpeta raíz (la que contiene el archivo `docker-compose.yml` y `Makefile`), hay que ejecutar el comando `make up` en la terminal. Una vez que el contenedor este funcionando, correr el script `requests.sh`
+Dentro de la carpeta raíz (la que contiene el archivo `docker-compose.yml` y `Makefile`), hay que ejecutar el comando `make test-api` en la terminal.

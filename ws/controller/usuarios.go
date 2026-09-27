@@ -1,5 +1,62 @@
 package controller
 
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"strconv"
+	"strings"
+
+	sqlc "foro/db/sqlc"
+	"foro/logic"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
+	_ "github.com/lib/pq"
+)
+
+func UsuariosAPIHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
+	switch r.Method {
+	case http.MethodPost:
+		createUsuario(w, r, queries)
+
+	case http.MethodGet:
+		getUsuarios(w, r, queries)
+
+	default:
+		http.Error(w, "Metodo no permitido", http.StatusMethodNotAllowed)
+	}
+}
+
+func UsuarioAPIHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
+	//extraer ID del path
+	parts := strings.Split(r.URL.Path, "/")
+	if len(parts) != 4 {
+		http.Error(w, "URL invalido", http.StatusBadRequest)
+		return
+	}
+
+	id, err := strconv.Atoi(parts[3])
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		getUsuario(w, r, queries, int32(id))
+
+	case http.MethodPut:
+		updateUsuario(w, r, queries, int32(id))
+
+	case http.MethodDelete:
+		deleteUsuario(w, r, queries, int32(id))
+
+	default:
+		http.Error(w, "Metodo no permitido", http.StatusMethodNotAllowed)
+	}
+}
+
 func createUsuario(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
 	var req logic.NuevoUsuario
 

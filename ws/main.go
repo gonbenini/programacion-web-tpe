@@ -1,16 +1,13 @@
 package main
 
 import (
-	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
-	"strings"
 
 	sqlc "foro/db/sqlc"
-	"foro/logic"
+
+	"foro/controller"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	_ "github.com/lib/pq"
@@ -40,48 +37,6 @@ func abrirDB() (*sql.DB, error) {
 	return db, nil
 }
 
-func usuariosAPIHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
-	switch r.Method {
-	case http.MethodPost:
-		createUsuario(w, r, queries)
-
-	case http.MethodGet:
-		getUsuarios(w, r, queries)
-
-	default:
-		http.Error(w, "Metodo no permitido", http.StatusMethodNotAllowed)
-	}
-}
-
-func usuarioAPIHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
-	//extraer ID del path
-	parts := strings.Split(r.URL.Path, "/")
-	if len(parts) != 4 {
-		http.Error(w, "URL invalido", http.StatusBadRequest)
-		return
-	}
-
-	id, err := strconv.Atoi(parts[3])
-	if err != nil {
-		http.Error(w, "Invalid user ID", http.StatusBadRequest)
-		return
-	}
-
-	switch r.Method {
-	case http.MethodGet:
-		getUsuario(w, r, queries, int32(id))
-
-	case http.MethodPut:
-		updateUsuario(w, r, queries, int32(id))
-
-	case http.MethodDelete:
-		deleteUsuario(w, r, queries, int32(id))
-
-	default:
-		http.Error(w, "Metodo no permitido", http.StatusMethodNotAllowed)
-	}
-}
-
 func main() {
 	// Testeamos que abra la db
 	db, err := abrirDB()
@@ -96,11 +51,11 @@ func main() {
 	port := ":8080"
 
 	http.HandleFunc("/api/usuarios", func(w http.ResponseWriter, r *http.Request) {
-		usuariosAPIHandler(w, r, queries)
+		controller.UsuariosAPIHandler(w, r, queries)
 	})
 
 	http.HandleFunc("/api/usuarios/", func(w http.ResponseWriter, r *http.Request) {
-		usuarioAPIHandler(w, r, queries)
+		controller.UsuarioAPIHandler(w, r, queries)
 	})
 
 	fmt.Printf("Servidor con formulario escuchando en http://localhost%s\n", port)

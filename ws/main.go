@@ -230,17 +230,7 @@ func main() {
 
 	queries := sqlc.New(db)
 
-	staticDir := "./static"
-	fileServer := http.FileServer(http.Dir(staticDir))
 	port := ":8080"
-
-	http.Handle("/", fileServer)
-	http.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
-		handleRegister(w, r, queries)
-	})
-	http.HandleFunc("/usuarios", func(w http.ResponseWriter, r *http.Request) {
-		handleUsuarios(w, r, queries)
-	})
 
 	http.HandleFunc("/api/usuarios", func(w http.ResponseWriter, r *http.Request) {
 		usuariosAPIHandler(w, r, queries)

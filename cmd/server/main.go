@@ -7,10 +7,10 @@ import (
 	"foro/internal/db"
 	"foro/internal/handlers"
 
+	sqlc "foro/internal/db/sqlc"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	_ "github.com/lib/pq"
-	sqlc "foro/internal/db/sqlc"
 )
 
 type Respuesta struct {
@@ -36,6 +36,14 @@ func main() {
 
 	http.HandleFunc("/api/usuarios/", func(w http.ResponseWriter, r *http.Request) {
 		handlers.UsuarioAPIHandler(w, r, queries)
+	})
+
+	http.HandleFunc("/api/mensajes", func(w http.ResponseWriter, r *http.Request) {
+		handlers.MensajesAPIHandler(w, r, queries)
+	})
+
+	http.HandleFunc("/api/mensajes/", func(w http.ResponseWriter, r *http.Request) {
+		handlers.MensajeAPIHandler(w, r, queries)
 	})
 
 	fmt.Printf("Servidor con formulario escuchando en http://localhost%s\n", port)

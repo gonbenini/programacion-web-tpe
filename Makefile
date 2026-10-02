@@ -47,7 +47,5 @@ test-api: generate
 	@until curl -fs http://localhost:8080/api/usuarios >/dev/null; do sleep 1; done
 	@./requests.sh
 	@docker compose stop >/dev/null 2>&1
-	@$(MAKE) clean >/dev/null 2>&1
 	@$(MAKE) down >/dev/null 2>&1
-# el make clean quizas deberia ir dentro de un trap por si falla algo para que se ejecute igual.
-# Es buena practica en vez de hacer `@make clean &>/dev/null`, usar `$(MAKE)`
+# Es buena practica en vez de hacer `@make down &>/dev/null`, usar `$(MAKE)`

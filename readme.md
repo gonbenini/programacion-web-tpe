@@ -117,7 +117,7 @@ La función `abrirDB()` gestiona la conexión con la base de datos PostgreSQL ut
 
 ### Endpoints de la API REST
 
-El sistema expone una API RESTful estructurada bajo el patrón de separación de **Colecciones** y **Recursos específicos**. Las rutas son procesadas por los controladores (`handlers`), quienes validan el cuerpo de las peticiones (JSON), interactúan con la capa de lógica y persistencia, y devuelven las respuestas correspondientes con sus códigos de estado HTTP.
+El sistema expone una API RESTful
 
 #### 1. Gestión de Usuarios
 
@@ -127,18 +127,16 @@ El sistema expone una API RESTful estructurada bajo el patrón de separación de
 | `POST` | `/api/usuarios` | Registra un nuevo usuario validando los campos obligatorios del payload. |
 | `GET` | `/api/usuarios/{id}` | Obtiene los detalles de un usuario específico por su ID. |
 | `PUT` | `/api/usuarios/{id}` | Actualiza la información de un usuario existente. |
-| `DELETE` | `/api/usuarios/{id}` | Elimina un usuario del sistema (borrado en cascada/set null según corresponda). |
+| `DELETE` | `/api/usuarios/{id}` | Elimina un usuario. |
 
 #### 2. Gestión de Mensajes
-
-Se implementó el CRUD para los mensajes del foro, contemplando el manejo de relaciones (autor y respuesta a otros mensajes) y el tratamiento de valores nulos provenientes de la base de datos.
 
 | Método HTTP | Ruta | Descripción |
 | :--- | :--- | :--- |
 | `GET` | `/api/mensajes` | Devuelve el listado de todos los mensajes. |
 | `POST` | `/api/mensajes` | Crea un nuevo mensaje. Valida la existencia del `id_usuario` y opcionalmente del mensaje al que responde. |
 | `GET` | `/api/mensajes/{id}` | Obtiene un mensaje específico. |
-| `PUT` | `/api/mensajes/{id}` | Actualización parcial (PATCH lógico). Permite modificar campos específicos (`texto`, `me_gusta`, `id_usuario`) sin sobreescribir ni borrar los demás, gracias al mapeo dinámico mediante punteros en Go. |
+| `PUT` | `/api/mensajes/{id}` | Actualización de los mensajes. |
 | `DELETE` | `/api/mensajes/{id}` | Elimina un mensaje por su ID. |
 
 ---

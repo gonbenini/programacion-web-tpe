@@ -123,7 +123,81 @@ func getMensaje(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries, i
 }
 
 func updateMensaje(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries, id int32) {
+	var req logic.EditarMensaje
 
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, "Error al procesar JSON", http.StatusBadRequest)
+		return
+	}
+
+	err = logic.ValidarEdicionMensaje(req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	ctx := context.Background()
+
+	// 1. Buscamos el mensaje original
+	mensajeActual, err := queries.GetMensajeById(ctx, id)
+	if err != nil {
+		http.Error(w, "Mensaje no encontrado", http.StatusNotFound)
+		return
+	}
+
+	// 2. Validamos que las nuevas dependencias existan en la BD (si es que las enviaron)
+	if req.IdUsuario != nil {
+		_, err := queries.GetUserById(ctx, *req.IdUsuario)
+		if err != nil {
+			http.Error(w, "El id_usuario especificado no existe", http.StatusBadRequest)
+			return
+		}
+	}
+
+	if req.IdRespuestaAMensaje != nil {
+		_, err := queries.GetMensajeById(ctx, *req.IdRespuestaAMensaje)
+		if err != nil {
+			http.Error(w, "El id_respuesta_a_mensaje especificado no existe", http.StatusBadRequest)
+			return
+		}
+	}
+
+	// 3. Preparamos las variables con los datos viejos
+	nuevoIdUsuario := mensajeActual.IDUsuario
+	nuevoIdRespuesta := mensajeActual.IDRespuestaAMensaje
+	nuevoTexto := mensajeActual.Texto
+	nuevoMeGusta := mensajeActual.MeGusta
+
+	// 4. Reemplazamos SOLO si en el JSON enviaron un dato nuevo
+	if req.IdUsuario != nil {
+		nuevoIdUsuario = sql.NullInt32{Int32: *req.IdUsuario, Valid: true}
+	}
+	if req.IdRespuestaAMensaje != nil {
+		nuevoIdRespuesta = sql.NullInt32{Int32: *req.IdRespuestaAMensaje, Valid: true}
+	}
+	if req.Texto != nil {
+		nuevoTexto = *req.Texto
+	}
+	if req.MeGusta != nil {
+		nuevoMeGusta = sql.NullInt32{Int32: *req.MeGusta, Valid: true}
+	}
+
+	// 5. Ejecutamos el Update
+	err = queries.UpdateMensaje(ctx, sqlc.UpdateMensajeParams{
+		IDMensaje:           id,
+		IDUsuario:           nuevoIdUsuario,
+		IDRespuestaAMensaje: nuevoIdRespuesta,
+		Texto:               nuevoTexto,
+		MeGusta:             nuevoMeGusta,
+	})
+	if err != nil {
+		fmt.Printf("Error al actualizar mensaje: %s\n", err)
+		http.Error(w, "Error interno", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func deleteMensaje(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries, id int32) {

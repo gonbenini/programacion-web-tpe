@@ -38,7 +38,7 @@ ORDER BY id_mensaje;
 
 -- name: UpdateMensaje :exec
 UPDATE Mensaje 
-SET texto = $2, me_gusta = $3 
+SET id_usuario = $2, id_respuesta_a_mensaje = $3, texto = $4, me_gusta = $5 
 WHERE id_mensaje = $1;
 
 -- name: DeleteMensaje :exec

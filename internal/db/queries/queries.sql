@@ -16,6 +16,9 @@ ORDER BY id_usuario;
 -- name: UpdateUser :exec
 UPDATE Usuario SET nombre = $2, mail = $3, contrasenia = $4 WHERE id_usuario = $1;
 
+-- name: UpdateUserPartial :exec
+UPDATE Usuario SET nombre = $2, mail = $3 WHERE id_usuario = $1;
+
 -- name: DeleteUser :exec
 DELETE FROM Usuario WHERE id_usuario = $1;
 

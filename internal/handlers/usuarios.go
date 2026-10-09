@@ -117,7 +117,61 @@ func getUsuario(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries, i
 }
 
 func updateUsuario(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries, id int32) {
+	ctx := context.Background()
+	var updatedUser logic.ActualizarUsuarioRequest
 
+	err := json.NewDecoder(r.Body).Decode(&updatedUser)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	user, err := queries.GetUserById(ctx, id) // Verificamos si el usuario existe
+	if err != nil {
+		http.Error(w, "Usuario no encontrado", http.StatusNotFound)
+		return
+	}
+
+	nombre := user.Nombre
+	mail := user.Mail
+	contrasenia := ""
+
+	if updatedUser.Nombre != nil {
+		nombre = *updatedUser.Nombre
+	}
+	if updatedUser.Mail != nil {
+		mail = *updatedUser.Mail
+	}
+	if updatedUser.Contrasenia != nil {
+		contrasenia = *updatedUser.Contrasenia
+	}
+
+	err = logic.ValidarActualizacion(updatedUser)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if contrasenia != "" {
+		err = queries.UpdateUser(ctx, sqlc.UpdateUserParams{
+			IDUsuario:   id,
+			Nombre:      nombre,
+			Mail:        mail,
+			Contrasenia: contrasenia,
+		})
+	}else {
+		err = queries.UpdateUserPartial(ctx, sqlc.UpdateUserPartialParams{
+			IDUsuario:   id,
+			Nombre:      nombre,
+			Mail:        mail,
+		})
+	}
+	if err != nil {
+		http.Error(w, "Error al actualizar usuario", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func deleteUsuario(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries, id int32) {

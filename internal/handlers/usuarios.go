@@ -117,7 +117,67 @@ func getUsuario(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries, i
 }
 
 func updateUsuario(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries, id int32) {
+	ctx := context.Background()
+	var updateUser logic.UpdateUsuario
 
+	err := json.NewDecoder(r.Body).Decode(&updateUser)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	//con los parametros de actualizacion, validamos que no sean vacios
+	err = logic.ValidarUpdateUsuario(updateUser)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	//verificamos que exista el usuario
+	user, err := queries.GetUserById(ctx, id)
+	if err != nil {
+		http.Error(w, "Usuario no encontrado", http.StatusNotFound)
+		return
+	}
+
+	//obtenemos los valores originales por defecto si es que no se actualizan
+	nombre := user.Nombre
+	mail := user.Mail
+	contrasenia := ""
+
+	//si se actualizan, los sobreescribimos con los nuevos valores
+	if updateUser.Nombre != nil {
+		nombre = *updateUser.Nombre
+	}
+	if updateUser.Mail != nil {
+		mail = *updateUser.Mail
+	}
+	if updateUser.Contrasenia != nil {
+		contrasenia = *updateUser.Contrasenia
+	}
+
+	//si la contraseña no es vacia, actualizamos con la nueva contraseña
+	if contrasenia != "" {
+		err = queries.UpdateUser(ctx, sqlc.UpdateUserParams{
+			IDUsuario: id,
+			Nombre:    nombre,
+			Mail:      mail,
+			Contrasenia: contrasenia,
+		})
+	} else { //si la contraseña es vacia, actualizamos sin tocar la contraseña
+		err = queries.UpdateUserPartial(ctx, sqlc.UpdateUserPartialParams{
+			IDUsuario: id,
+			Nombre:    nombre,
+			Mail:      mail,
+		})
+	}
+
+	if err != nil {
+		http.Error(w, "Error al actualizar usuario", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func deleteUsuario(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries, id int32) {

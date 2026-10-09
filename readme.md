@@ -115,37 +115,31 @@ La función `abrirDB()` gestiona la conexión con la base de datos PostgreSQL ut
 
 ---
 
-### 1. Registro de usuarios (`/register`)
+### Endpoints de la API REST
 
-Permite la creación de un nuevo usuario en la plataforma mediante una solicitud asíncrona desde el navegador.
+El sistema expone una API RESTful estructurada bajo el patrón de separación de **Colecciones** y **Recursos específicos**. Las rutas son procesadas por los controladores (`handlers`), quienes validan el cuerpo de las peticiones (JSON), interactúan con la capa de lógica y persistencia, y devuelven las respuestas correspondientes con sus códigos de estado HTTP.
 
-#### Flujo de trabajo:
-1. **Frontend (`index.html` & `index.js`)**:
-   - El usuario ingresa `nombre`, `mail` y `contrasenia` en el formulario HTML.
-   - JavaScript intercepta el evento de envío (`submit`) previniendo la recarga predeterminada de la página (`event.preventDefault()`).
-   - Envía una petición `POST` mediante la **Fetch API** codificando los datos del formulario (`URLSearchParams`).
-2. **Backend (`main.go` -> `handleRegister`)**:
-   - Valida la ruta y procesa los datos ingresados con `r.ParseForm()`.
-   - Llama al método `queries.CreateUser(ctx, params)` generado por `sqlc`.
-   - Almacena el nuevo usuario en PostgreSQL.
-   - Responde con un JSON indicando el estado del proceso (`{"mensaje": "Se envió correctamente"}`).
-3. **Respuesta en interfaz**:
-   - JavaScript recibe la respuesta JSON y muestra un mensaje de confirmación verde o de error rojo en el elemento `<p id="mensaje-alerta">`.
+#### 1. Gestión de Usuarios
 
----
+| Método HTTP | Ruta | Descripción |
+| :--- | :--- | :--- |
+| `GET` | `/api/usuarios` | Devuelve el listado completo de usuarios en formato JSON. |
+| `POST` | `/api/usuarios` | Registra un nuevo usuario validando los campos obligatorios del payload. |
+| `GET` | `/api/usuarios/{id}` | Obtiene los detalles de un usuario específico por su ID. |
+| `PUT` | `/api/usuarios/{id}` | Actualiza la información de un usuario existente. |
+| `DELETE` | `/api/usuarios/{id}` | Elimina un usuario del sistema (borrado en cascada/set null según corresponda). |
 
-### 2. Listado de usuarios (`/usuarios`)
+#### 2. Gestión de Mensajes
 
-Permite la consulta de todos los usuarios registrados en el sistema.
+Se implementó el CRUD para los mensajes del foro, contemplando el manejo de relaciones (autor y respuesta a otros mensajes) y el tratamiento de valores nulos provenientes de la base de datos.
 
-#### Flujo de trabajo:
-1. **Frontend (`index.html`)**:
-   - Contiene un botón *"Ver usuarios"* que redirige al navegador directamente a `/usuarios`.
-2. **Backend (`main.go` -> `handleUsuarios`)**:
-   - El handler instancia la estructura `Queries` de `sqlc`.
-   - Ejecuta `queries.ListUsers(ctx)` para traer todos los registros de la tabla `Usuario`.
-   - Configura la cabecera `Content-Type: text/html; charset=utf-8`.
-   - Construye y renderiza dinámicamente un documento HTML con una lista no ordenada (`<ul>`) mostrando `ID`, `Nombre` y `Mail` de cada usuario.
+| Método HTTP | Ruta | Descripción |
+| :--- | :--- | :--- |
+| `GET` | `/api/mensajes` | Devuelve el listado de todos los mensajes. |
+| `POST` | `/api/mensajes` | Crea un nuevo mensaje. Valida la existencia del `id_usuario` y opcionalmente del mensaje al que responde. |
+| `GET` | `/api/mensajes/{id}` | Obtiene un mensaje específico. |
+| `PUT` | `/api/mensajes/{id}` | Actualización parcial (PATCH lógico). Permite modificar campos específicos (`texto`, `me_gusta`, `id_usuario`) sin sobreescribir ni borrar los demás, gracias al mapeo dinámico mediante punteros en Go. |
+| `DELETE` | `/api/mensajes/{id}` | Elimina un mensaje por su ID. |
 
 ---
 

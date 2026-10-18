@@ -121,7 +121,7 @@ RESPUESTA_POST_INVALIDO=$(curl -s \
 if echo "$RESPUESTA_POST_INVALIDO" | grep -qE "HTTP/[0-9.]+ 2[0-9]{2}"; then
   echo -e "\nResultado de crear usuario con datos vacios: VALIDO (el servidor aceptó la petición)"
 else
-  echo -e "\nResultado de crear usuario con datos vacios: INVALIDO (rechazado por validación)"
+  echo -e "\nResultado de crear usuario con datos vacios: INVALIDO (rechazado por validación) - Esto refleja un resultado correcto a nivel testeo."
 fi
 echo "$RESPUESTA_POST_INVALIDO"
 
@@ -157,32 +157,108 @@ test_edicion_mensajes() {
   local RES_U2=$(curl -s -X POST $BASE_URL/usuarios -H "Content-Type: application/json" -d '{"nombre": "Tomi Edit","mail": "tomi_edit_'$TIMESTAMP'@test.com","contrasenia": "123"}')
   local ID_U2=$(echo "$RES_U2" | grep -o '"id_usuario":[0-9]*' | tr -dc '0-9')
 
-  # Crear mensajes de prueba
-  local RES_M1=$(curl -s -X POST $BASE_URL/mensajes -H "Content-Type: application/json" -d '{"id_usuario": '$ID_U1', "texto": "Mensaje original."}')
+  # Crear mensajes de prueba (Testeamos POST)
+  local RES_M1=$(curl -s -X POST $BASE_URL/mensajes -H "Content-Type: application/json" -d '{"id_usuario": '$ID_U1', "texto": "Mensaje original."}' -i -w "\n")
+  if echo "$RES_M1" | grep -qE "HTTP/[0-9.]+ 2[0-9]{2}"; then
+    echo -e "\nResultado de crear mensaje 1: VALIDO"
+  else
+    echo -e "\nResultado de crear mensaje 1: INVALIDO"
+  fi
+  echo "$RES_M1"
   local ID_M1=$(echo "$RES_M1" | grep -o '"id_mensaje":[0-9]*' | tr -dc '0-9')
 
-  local RES_M2=$(curl -s -X POST $BASE_URL/mensajes -H "Content-Type: application/json" -d '{"id_usuario": '$ID_U2', "texto": "Mensaje que sera respondido."}')
+  local RES_M2=$(curl -s -X POST $BASE_URL/mensajes -H "Content-Type: application/json" -d '{"id_usuario": '$ID_U2', "texto": "Mensaje que sera respondido."}' -i -w "\n")
+  if echo "$RES_M2" | grep -qE "HTTP/[0-9.]+ 2[0-9]{2}"; then
+    echo -e "\nResultado de crear mensaje 2: VALIDO"
+  else
+    echo -e "\nResultado de crear mensaje 2: INVALIDO"
+  fi
+  echo "$RES_M2"
   local ID_M2=$(echo "$RES_M2" | grep -o '"id_mensaje":[0-9]*' | tr -dc '0-9')
 
   # Testear PUT: Solo Texto
-  echo -e "\nResultado de editar solo el texto (valido):"
-  curl -s -X PUT $BASE_URL/mensajes/$ID_M1 -H "Content-Type: application/json" -d '{"texto": "Texto editado por PUT"}' -i -w "\n"
+  local RES_PUT_TEXTO=$(curl -s -X PUT $BASE_URL/mensajes/$ID_M1 -H "Content-Type: application/json" -d '{"texto": "Texto editado por PUT"}' -i -w "\n")
+  if echo "$RES_PUT_TEXTO" | grep -qE "HTTP/[0-9.]+ 2[0-9]{2}"; then
+    echo -e "\nResultado de editar solo el texto: VALIDO"
+  else
+    echo -e "\nResultado de editar solo el texto: INVALIDO"
+  fi
+  echo "$RES_PUT_TEXTO"
 
   # Testear PUT: Solo Me Gusta
-  echo -e "\nResultado de editar solo los me gusta (valido):"
-  curl -s -X PUT $BASE_URL/mensajes/$ID_M1 -H "Content-Type: application/json" -d '{"me_gusta": 99}' -i -w "\n"
+  local RES_PUT_LIKES=$(curl -s -X PUT $BASE_URL/mensajes/$ID_M1 -H "Content-Type: application/json" -d '{"me_gusta": 99}' -i -w "\n")
+  if echo "$RES_PUT_LIKES" | grep -qE "HTTP/[0-9.]+ 2[0-9]{2}"; then
+    echo -e "\nResultado de editar solo los me gusta: VALIDO"
+  else
+    echo -e "\nResultado de editar solo los me gusta: INVALIDO"
+  fi
+  echo "$RES_PUT_LIKES"
 
   # Testear PUT: Solo id_usuario
-  echo -e "\nResultado de cambiar solo el autor (valido):"
-  curl -s -X PUT $BASE_URL/mensajes/$ID_M1 -H "Content-Type: application/json" -d '{"id_usuario": '$ID_U2'}' -i -w "\n"
+  local RES_PUT_AUTOR=$(curl -s -X PUT $BASE_URL/mensajes/$ID_M1 -H "Content-Type: application/json" -d '{"id_usuario": '$ID_U2'}' -i -w "\n")
+  if echo "$RES_PUT_AUTOR" | grep -qE "HTTP/[0-9.]+ 2[0-9]{2}"; then
+    echo -e "\nResultado de cambiar solo el autor: VALIDO"
+  else
+    echo -e "\nResultado de cambiar solo el autor: INVALIDO"
+  fi
+  echo "$RES_PUT_AUTOR"
 
   # Testear PUT: Solo id_respuesta_a_mensaje
-  echo -e "\nResultado de asignar respuesta a otro mensaje (valido):"
-  curl -s -X PUT $BASE_URL/mensajes/$ID_M1 -H "Content-Type: application/json" -d '{"id_respuesta_a_mensaje": '$ID_M2'}' -i -w "\n"
+  local RES_PUT_RESP=$(curl -s -X PUT $BASE_URL/mensajes/$ID_M1 -H "Content-Type: application/json" -d '{"id_respuesta_a_mensaje": '$ID_M2'}' -i -w "\n")
+  if echo "$RES_PUT_RESP" | grep -qE "HTTP/[0-9.]+ 2[0-9]{2}"; then
+    echo -e "\nResultado de asignar respuesta a otro mensaje: VALIDO"
+  else
+    echo -e "\nResultado de asignar respuesta a otro mensaje: INVALIDO"
+  fi
+  echo "$RES_PUT_RESP"
 
-  # Verificar el resultado final
-  echo -e "\nResultado final con todos los campos actualizados (valido):"
-  curl -s -X GET $BASE_URL/mensajes/$ID_M1 -i -w "\n"
+  # Testear GET por ID (Leer uno)
+  local RES_GET_UNO=$(curl -s -X GET $BASE_URL/mensajes/$ID_M1 -i -w "\n")
+  if echo "$RES_GET_UNO" | grep -qE "HTTP/[0-9.]+ 2[0-9]{2}"; then
+    echo -e "\nResultado final con todos los campos actualizados (leer uno): VALIDO"
+  else
+    echo -e "\nResultado final con todos los campos actualizados (leer uno): INVALIDO"
+  fi
+  echo "$RES_GET_UNO"
+
+  # Testear GET general (Leer todos)
+  local RES_GET_TODOS=$(curl -s -X GET $BASE_URL/mensajes -i -w "\n")
+  if echo "$RES_GET_TODOS" | grep -qE "HTTP/[0-9.]+ 2[0-9]{2}"; then
+    echo -e "\nResultado de obtener todos los mensajes: VALIDO"
+  else
+    echo -e "\nResultado de obtener todos los mensajes: INVALIDO"
+  fi
+  echo "$RES_GET_TODOS"
+
+  # Testear caso borde (Crear mensaje con datos invalidos/vacios)
+  local RES_POST_INVALIDO=$(curl -s -X POST $BASE_URL/mensajes -H "Content-Type: application/json" -d '{"texto": ""}' -i -w "\n")
+  if echo "$RES_POST_INVALIDO" | grep -qE "HTTP/[0-9.]+ 2[0-9]{2}"; then
+    echo -e "\nResultado de crear mensaje invalido: VALIDO (el servidor aceptó la petición)"
+  else
+    echo -e "\nResultado de crear mensaje invalido: INVALIDO (rechazado por validación) - Esto refleja un resultado correcto a nivel testeo"
+  fi
+  echo "$RES_POST_INVALIDO"
+
+  # Testear DELETE de los mensajes (Eliminar)
+  local RES_DEL_M1=$(curl -s -X DELETE $BASE_URL/mensajes/$ID_M1 -i -w "\n")
+  if echo "$RES_DEL_M1" | grep -qE "HTTP/[0-9.]+ 2[0-9]{2}"; then
+    echo -e "\nResultado de eliminar mensaje 1: VALIDO"
+  else
+    echo -e "\nResultado de eliminar mensaje 1: INVALIDO"
+  fi
+  echo "$RES_DEL_M1"
+
+  local RES_DEL_M2=$(curl -s -X DELETE $BASE_URL/mensajes/$ID_M2 -i -w "\n")
+  if echo "$RES_DEL_M2" | grep -qE "HTTP/[0-9.]+ 2[0-9]{2}"; then
+    echo -e "\nResultado de eliminar mensaje 2: VALIDO"
+  else
+    echo -e "\nResultado de eliminar mensaje 2: INVALIDO"
+  fi
+  echo "$RES_DEL_M2"
+
+  # Limpieza de usuarios de prueba creados en la funcion
+  curl -s -X DELETE $BASE_URL/usuarios/$ID_U1 > /dev/null
+  curl -s -X DELETE $BASE_URL/usuarios/$ID_U2 > /dev/null
 }
 
 test_edicion_mensajes

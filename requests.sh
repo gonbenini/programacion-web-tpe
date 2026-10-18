@@ -63,6 +63,33 @@ curl -X DELETE http://localhost:8080/api/usuarios/$USER1_ID -i -w "\n"
 
 curl -X DELETE http://localhost:8080/api/usuarios/$USER2_ID -i -w "\n"
 
+# testeamos el edit
+RESPUESTA_PUT_USER=$(curl -s \
+  -X PUT http://localhost:8080/api/usuarios/$USER1_ID \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nombre": "Gon Editado",
+    "mail": "'"$RANDOM_MAIL"'",
+    "contrasenia": "654321"
+  }' \
+  -i \
+  -w "\n")
+
+echo "$RESPUESTA_PUT_USER"
+
+# testeamos caso borde donde los datos no pasan validacion
+RESPUESTA_POST_INVALIDO=$(curl -s \
+  -X POST http://localhost:8080/api/usuarios \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nombre": "",
+    "mail": "",
+    "contrasenia": ""
+  }' \
+  -i \
+  -w "\n")
+
+echo "$RESPUESTA_POST_INVALIDO"
 
 test_edicion_mensajes() {
   local BASE_URL="http://localhost:8080/api"

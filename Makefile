@@ -42,9 +42,10 @@ test: generate
 # Lo que hace es buscar archivos cuyos nombres terminen en _test.go y ejecuta las funciones que tenga. -v es verbose, el primer `./` es para que empiece a buscar de la carpeta actual.
 
 test-api: generate
-	@docker compose up -d 
+	@docker compose up -d --wait
 	# esperando inicializacion de servicios
-	@until curl -fs http://localhost:8080/api/usuarios >/dev/null; do sleep 1; done
+	@until docker compose exec -T db pg_isready -U dbuser -d foro > /dev/null 2>&1; do sleep 1; done # esperamos qu ela db este levantada
+	@until curl -fs http://localhost:8080/api/usuarios > /dev/null; do sleep 1; done
 	@./requests.sh
 	@docker compose stop >/dev/null 2>&1
 	@$(MAKE) down >/dev/null 2>&1

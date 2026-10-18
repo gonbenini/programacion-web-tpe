@@ -15,6 +15,11 @@ RESPUESTA_POST_1=$(curl -s \
   -i \
   -w "\n")
 
+if echo "$RESPUESTA_POST_1" | grep -qE "HTTP/[0-9.]+ 2[0-9]{2}"; then
+  echo -e "\nResultado de crear usuario 1: VALIDO"
+else
+  echo -e "\nResultado de crear usuario 1: INVALIDO"
+fi
 echo "$RESPUESTA_POST_1"
 
 # -X POST: 
@@ -37,7 +42,14 @@ USER1_ID=$(echo "$RESPUESTA_POST_1" | grep -o '"id_usuario":[0-9]*' | tr -dc '0-
 
 
 # Testeamos el GET usuarios/{id}
-curl -X GET http://localhost:8080/api/usuarios/$USER1_ID -i -w "\n"
+RESPUESTA_GET_UNO=$(curl -s -X GET http://localhost:8080/api/usuarios/$USER1_ID -i -w "\n")
+
+if echo "$RESPUESTA_GET_UNO" | grep -qE "HTTP/[0-9.]+ 2[0-9]{2}"; then
+  echo -e "\nResultado de obtener usuario por ID: VALIDO"
+else
+  echo -e "\nResultado de obtener usuario por ID: INVALIDO"
+fi
+echo "$RESPUESTA_GET_UNO"
 
 RANDOM_MAIL_2="usuario2_$(date +%s)@test.com"
 
@@ -51,17 +63,27 @@ RESPUESTA_POST_2=$(curl -s \
   }' \
   -i \
   -w "\n")
+
+if echo "$RESPUESTA_POST_2" | grep -qE "HTTP/[0-9.]+ 2[0-9]{2}"; then
+  echo -e "\nResultado de crear usuario 2: VALIDO"
+else
+  echo -e "\nResultado de crear usuario 2: INVALIDO"
+fi
+echo "$RESPUESTA_POST_2"
+
 USER2_ID=$(echo "$RESPUESTA_POST_2" | grep -o '"id_usuario":[0-9]*' | tr -dc '0-9')
   
 
-# Testeamoso el GET usuarios/ (trae todos)
-curl -X GET http://localhost:8080/api/usuarios -i -w "\n"
+# Testeamos el GET usuarios/ (trae todos)
+RESPUESTA_GET_TODOS=$(curl -s -X GET http://localhost:8080/api/usuarios -i -w "\n")
 
+if echo "$RESPUESTA_GET_TODOS" | grep -qE "HTTP/[0-9.]+ 2[0-9]{2}"; then
+  echo -e "\nResultado de obtener todos los usuarios: VALIDO"
+else
+  echo -e "\nResultado de obtener todos los usuarios: INVALIDO"
+fi
+echo "$RESPUESTA_GET_TODOS"
 
-# Testeamos el eliminar de los dos registros
-curl -X DELETE http://localhost:8080/api/usuarios/$USER1_ID -i -w "\n"
-
-curl -X DELETE http://localhost:8080/api/usuarios/$USER2_ID -i -w "\n"
 
 # testeamos el edit
 RESPUESTA_PUT_USER=$(curl -s \
@@ -75,7 +97,13 @@ RESPUESTA_PUT_USER=$(curl -s \
   -i \
   -w "\n")
 
+if echo "$RESPUESTA_PUT_USER" | grep -qE "HTTP/[0-9.]+ 2[0-9]{2}"; then
+  echo -e "\nResultado de editar usuario 1: VALIDO"
+else
+  echo -e "\nResultado de editar usuario 1: INVALIDO"
+fi
 echo "$RESPUESTA_PUT_USER"
+
 
 # testeamos caso borde donde los datos no pasan validacion
 RESPUESTA_POST_INVALIDO=$(curl -s \
@@ -89,7 +117,34 @@ RESPUESTA_POST_INVALIDO=$(curl -s \
   -i \
   -w "\n")
 
+# Acá analizamos el código HTTP real: como enviamos datos vacíos, el servidor devolverá 400 (no un 2xx), por lo que caerá en INVALIDO
+if echo "$RESPUESTA_POST_INVALIDO" | grep -qE "HTTP/[0-9.]+ 2[0-9]{2}"; then
+  echo -e "\nResultado de crear usuario con datos vacios: VALIDO (el servidor aceptó la petición)"
+else
+  echo -e "\nResultado de crear usuario con datos vacios: INVALIDO (rechazado por validación)"
+fi
 echo "$RESPUESTA_POST_INVALIDO"
+
+
+# Testeamos el eliminar de los dos registros
+RESPUESTA_DEL_1=$(curl -s -X DELETE http://localhost:8080/api/usuarios/$USER1_ID -i -w "\n")
+
+if echo "$RESPUESTA_DEL_1" | grep -qE "HTTP/[0-9.]+ 2[0-9]{2}"; then
+  echo -e "\nResultado de eliminar usuario 1: VALIDO"
+else
+  echo -e "\nResultado de eliminar usuario 1: INVALIDO"
+fi
+echo "$RESPUESTA_DEL_1"
+
+
+RESPUESTA_DEL_2=$(curl -s -X DELETE http://localhost:8080/api/usuarios/$USER2_ID -i -w "\n")
+
+if echo "$RESPUESTA_DEL_2" | grep -qE "HTTP/[0-9.]+ 2[0-9]{2}"; then
+  echo -e "\nResultado de eliminar usuario 2: VALIDO"
+else
+  echo -e "\nResultado de eliminar usuario 2: INVALIDO"
+fi
+echo "$RESPUESTA_DEL_2"
 
 test_edicion_mensajes() {
   local BASE_URL="http://localhost:8080/api"

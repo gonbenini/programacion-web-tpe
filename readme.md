@@ -15,19 +15,22 @@ El objetivo es desarrollar una aplicación web a partir de un dominio simple, ap
 
 ## 📑 Índice
 
-- [Introducción](#introducción)
+- [Introducción](#introduccion)
   - [Dominio elegido](#dominio-elegido)
   - [Ejemplo de la estructura](#ejemplo-de-la-estructura)
   - [Modelo de datos](#modelo-de-datos)
-- [Persistencia y Generación de Código con sqlc](#persistencia-y-generación-de-código-con-sqlc)
-  - [Estructura del código generado](#estructura-del-código-generado)
+- [Estructura del proyecto](#estructura-del-proyecto)
+- [Persistencia y Generación de Código con sqlc](#persistencia-y-generacion-de-codigo-con-sqlc)
+  - [Estructura del código generado](#estructura-del-codigo-generado)
   - [Consultas SQL mapeadas](#consultas-sql-mapeadas)
-- [Funcionalidades Básicas del Sistema](#funcionalidades-básicas-del-sistema)
-  - [1. Registro de usuarios (`/register`)](#1-registro-de-usuarios-register)
-  - [2. Listado de usuarios (`/usuarios`)](#2-listado-de-usuarios-usuarios)
+  - [Conexión a la Base de Datos](#conexion-a-la-base-de-datos)
 - [Instancia de la app](#instancia-de-la-app)
 - [Requisitos](#requisitos)
 - [Despliegue](#despliegue)
+
+- [Testeo](#testeo)
+  - [Testeo persistencia](#testeo-persistencia)
+  - [Testeo api](#testeo-api)
 
 ---
 
@@ -35,44 +38,82 @@ El objetivo es desarrollar una aplicación web a partir de un dominio simple, ap
 
 ### Dominio elegido
 
-El dominio de la aplicación será una página tipo foro, donde los usuarios podrán participar en diferentes tableros y discusiones mediante mensajes.
+El dominio de la aplicación será una página tipo foro, donde los usuarios podrán participar escribiendo mensajes en respuesta a otros mensajes o por su cuenta.
 
-Los tableros son formas de organizar y categorizar las discusiones.
-
-Cada tablero puede tener **cero, uno o múltiples subtableros**, permitiendo construir una estructura de categorías de profundidad variable.
+Cada mensaje tiene asociado un usuario y puede llegar a tener un mensaje al que responde.
 
 ### Ejemplo de la estructura:
 
 ```text
-📁 Tablero de inicio
+💬 Mensaje inicial (👤 Usuario A)
 │
-├── 📁 Subtablero
+├── 📝 Respuesta (👤 Usuario B)
 │   │
-│   ├── 📁 Subtablero
+│   ├── 📝 Respuesta (👤 Usuario C)
 │   │   │
-│   │   ├── 💬 Discusión
-│   │   │   ├── 📝 Mensaje
-│   │   │   ├── 📝 Mensaje
-│   │   │   └── 📝 Mensaje
+│   │   ├── 📝 Respuesta (👤 Usuario A)
 │   │   │
-│   │   └── 💬 Discusión
-│   │       └── 📝 Mensaje
+│   │   └── 📝 Otra respuesta (👤 Usuario D)
 │   │
-│   └── 📁 Subtablero
-│       └── 💬 Discusión
+│   └── 📝 Otra respuesta (👤 Usuario C)
 │
-└── 📁 Subtablero
-    └── 📁 Subtablero
-        └── 💬 Discusión
-            └── 📝 Mensaje
+├── 📝 Otra respuesta (👤 Usuario D)
+│   │
+│   └── 📝 Respuesta (👤 Usuario B)
+│
+└── 📝 Otra respuesta (👤 Usuario C)
 ```
 
 ### Modelo de datos
 
 - **Usuario:** `id_usuario`, `nombre`, `fecha_creacion`, `contrasenia`, `mail`
-- **Tablero:** `id_tablero`, `nombre`, `id_tablero_padre`, `descripcion`
-- **Discusión:** `nombre`, `id_usuario_creador`, `id_tablero`, `id_primer_mensaje`
-- **Mensaje:** `id_usuario`, `id_respuesta_a_mensaje`, `texto`, `me_gusta`, `id_discusion`
+- **Mensaje:** `id_usuario`, `id_respuesta_a_mensaje`, `texto`, `me_gusta`
+
+---
+
+## Estructura de proyecto
+<pre>
+.
+├── <strong><span style="color: orange">cmd</span></strong>
+│   └── <strong><span style="color: orange">server</span></strong>
+│       └── main.go
+├── docker-compose.yml
+├── go.mod
+├── go.sum
+├── <strong><span style="color: orange">internal</span></strong>
+│   ├── <strong><span style="color: orange">db</span></strong>
+│   │   ├── db_controller.go
+│   │   ├── <strong><span style="color: orange">queries</span></strong>
+│   │   │   └── queries.sql
+│   │   ├── <strong><span style="color: orange">schema</span></strong>
+│   │   │   └── schema.sql
+│   │   ├── <strong><span style="color: orange">sqlc</span></strong>
+│   │   │   ├── db.go
+│   │   │   ├── models.go
+│   │   │   └── queries.sql.go
+│   │   └── <strong><span style="color: orange">tests</span></strong>
+│   │       ├── db_mensaje_test.go
+│   │       └── db_usuarios_test.go
+│   ├── <strong><span style="color: orange">handlers</span></strong>
+│   │   ├── mensajes.go
+│   │   └── usuarios.go
+│   └── <strong><span style="color: orange">logic</span></strong>
+│       ├── mensajes.go
+│       └── usuarios.go
+├── Makefile
+├── readme.md
+├── requests.sh
+└── sqlc.yaml
+</pre>
+
+<strong>Reestructuramos el arbol de archivos para:
+- Contener en <strong><span style="color: orange">cmd/server</span></strong> el archivo principal del servidor que contiene los endpoints de la API para cada entidad.
+
+- Contener en <strong><span style="color: orange">internal/db</span></strong> toda la logica asociada al manejo de la base de datos incluyendo el controlador y sus respectivos tests de persistencia.
+
+- Contener en <strong><span style="color: orange">internal/handlers</span></strong> toda la logica asociada al manejo de consultas a la API para las entidades usuarios y mensajes por separado.
+
+- Contener en <strong><span style="color: orange">internal/logic</span></strong> toda la logica asociada a los chequeos de negocio como la verificacion de campos vacios.
 
 ---
 
@@ -100,13 +141,7 @@ A través de `sqlc`, se implementaron las siguientes operaciones sobre la entida
 | `UpdateUser` | `UPDATE Usuario SET nombre = $2, mail = $3, contrasenia = $4 WHERE id_usuario = $1` | Actualiza la información de un usuario existente. |
 | `DeleteUser` | `DELETE FROM Usuario WHERE id_usuario = $1` | Elimina un usuario por su ID. |
 
----
-
-## Funcionalidades Básicas del Sistema - Interaccion con webservice
-
-El servidor expone endpoints básicos para la interacción con la interfaz de usuario, conectando el frontend con la base de datos mediante la capa generada por `sqlc`.
-
-### Conexión a la Base de Datos (`main.go`)
+### Conexión a la Base de Datos
 
 La función `abrirDB()` gestiona la conexión con la base de datos PostgreSQL utilizando la URL de conexión del contenedor Docker:
 - Cadena de conexión: `postgres://dbuser:dbpw@db:5432/foro?sslmode=disable`
@@ -115,37 +150,17 @@ La función `abrirDB()` gestiona la conexión con la base de datos PostgreSQL ut
 
 ---
 
-### 1. Registro de usuarios (`/register`)
+## Estructura de endpoints establecidos
+La logica se baso por lo visto en la clase donde desde el main del servidor establecemos, para cada entidad, las siguientes rutas:
+- api/usuarios
+- api/usuarios/
+- api/mensajes
+- api/mensajes/
 
-Permite la creación de un nuevo usuario en la plataforma mediante una solicitud asíncrona desde el navegador.
+La intencion de esto es dividir aquellas consultas que no necesitan de, en este caso, un identificador como `create` o `getAll` de las que si lo necesitan como `get`, `update` y `delete`.
 
-#### Flujo de trabajo:
-1. **Frontend (`index.html` & `index.js`)**:
-   - El usuario ingresa `nombre`, `mail` y `contrasenia` en el formulario HTML.
-   - JavaScript intercepta el evento de envío (`submit`) previniendo la recarga predeterminada de la página (`event.preventDefault()`).
-   - Envía una petición `POST` mediante la **Fetch API** codificando los datos del formulario (`URLSearchParams`).
-2. **Backend (`main.go` -> `handleRegister`)**:
-   - Valida la ruta y procesa los datos ingresados con `r.ParseForm()`.
-   - Llama al método `queries.CreateUser(ctx, params)` generado por `sqlc`.
-   - Almacena el nuevo usuario en PostgreSQL.
-   - Responde con un JSON indicando el estado del proceso (`{"mensaje": "Se envió correctamente"}`).
-3. **Respuesta en interfaz**:
-   - JavaScript recibe la respuesta JSON y muestra un mensaje de confirmación verde o de error rojo en el elemento `<p id="mensaje-alerta">`.
+Asi, dada la ruta especificada, construimos un `handler` para cada tipo de direccion para cada entidad. Por ejemplo, para usuarios, tenemos `UsuariosAPIHandler` asociado a `api/usuarios` que se encarga de redirigir a la operacion de creacion u obtencion total segun el metodo `http` provisto (POST o GET). Luego, tenemos `UsuarioAPIHandler` asociado a `api/usuarios/` que se encarga de extraer el id de la URL y redirigir a la operacion de actualizacion, obtencion por id o eliminacion segun el metodo `http` provisto (GET, UPDATE o DELETE).
 
----
-
-### 2. Listado de usuarios (`/usuarios`)
-
-Permite la consulta de todos los usuarios registrados en el sistema.
-
-#### Flujo de trabajo:
-1. **Frontend (`index.html`)**:
-   - Contiene un botón *"Ver usuarios"* que redirige al navegador directamente a `/usuarios`.
-2. **Backend (`main.go` -> `handleUsuarios`)**:
-   - El handler instancia la estructura `Queries` de `sqlc`.
-   - Ejecuta `queries.ListUsers(ctx)` para traer todos los registros de la tabla `Usuario`.
-   - Configura la cabecera `Content-Type: text/html; charset=utf-8`.
-   - Construye y renderiza dinámicamente un documento HTML con una lista no ordenada (`<ul>`) mostrando `ID`, `Nombre` y `Mail` de cada usuario.
 
 ---
 
@@ -173,8 +188,8 @@ Dentro de la carpeta raíz (la que contiene el archivo `docker-compose.yml` y `M
 ## Testeo
 
 
-### Testeo persistencia
+### Persistencia
 Dentro de la carpeta raíz (la que contiene el archivo `docker-compose.yml` y `Makefile`), hay que ejecutar el comando `make test` en la terminal.
 
-### Testeo api
+### API REST
 Dentro de la carpeta raíz (la que contiene el archivo `docker-compose.yml` y `Makefile`), hay que ejecutar el comando `make test-api` en la terminal.

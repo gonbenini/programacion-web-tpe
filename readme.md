@@ -35,44 +35,82 @@ El objetivo es desarrollar una aplicación web a partir de un dominio simple, ap
 
 ### Dominio elegido
 
-El dominio de la aplicación será una página tipo foro, donde los usuarios podrán participar en diferentes tableros y discusiones mediante mensajes.
+El dominio de la aplicación será una página tipo foro, donde los usuarios podrán participar escribiendo mensajes en respuesta a otros mensajes o por su cuenta.
 
-Los tableros son formas de organizar y categorizar las discusiones.
-
-Cada tablero puede tener **cero, uno o múltiples subtableros**, permitiendo construir una estructura de categorías de profundidad variable.
+Cada mensaje tiene asociado un usuario y puede llegar a tener un mensaje al que responde.
 
 ### Ejemplo de la estructura:
 
 ```text
-📁 Tablero de inicio
+💬 Mensaje inicial (👤 Usuario A)
 │
-├── 📁 Subtablero
+├── 📝 Respuesta (👤 Usuario B)
 │   │
-│   ├── 📁 Subtablero
+│   ├── 📝 Respuesta (👤 Usuario C)
 │   │   │
-│   │   ├── 💬 Discusión
-│   │   │   ├── 📝 Mensaje
-│   │   │   ├── 📝 Mensaje
-│   │   │   └── 📝 Mensaje
+│   │   ├── 📝 Respuesta (👤 Usuario A)
 │   │   │
-│   │   └── 💬 Discusión
-│   │       └── 📝 Mensaje
+│   │   └── 📝 Otra respuesta (👤 Usuario D)
 │   │
-│   └── 📁 Subtablero
-│       └── 💬 Discusión
+│   └── 📝 Otra respuesta (👤 Usuario C)
 │
-└── 📁 Subtablero
-    └── 📁 Subtablero
-        └── 💬 Discusión
-            └── 📝 Mensaje
+├── 📝 Otra respuesta (👤 Usuario D)
+│   │
+│   └── 📝 Respuesta (👤 Usuario B)
+│
+└── 📝 Otra respuesta (👤 Usuario C)
 ```
 
 ### Modelo de datos
 
 - **Usuario:** `id_usuario`, `nombre`, `fecha_creacion`, `contrasenia`, `mail`
-- **Tablero:** `id_tablero`, `nombre`, `id_tablero_padre`, `descripcion`
-- **Discusión:** `nombre`, `id_usuario_creador`, `id_tablero`, `id_primer_mensaje`
-- **Mensaje:** `id_usuario`, `id_respuesta_a_mensaje`, `texto`, `me_gusta`, `id_discusion`
+- **Mensaje:** `id_usuario`, `id_respuesta_a_mensaje`, `texto`, `me_gusta`
+
+---
+
+## Estructura de proyecto
+<pre>
+.
+├── <strong><span style="color: orange">cmd</span></strong>
+│   └── <strong><span style="color: orange">server</span></strong>
+│       └── main.go
+├── docker-compose.yml
+├── go.mod
+├── go.sum
+├── <strong><span style="color: orange">internal</span></strong>
+│   ├── <strong><span style="color: orange">db</span></strong>
+│   │   ├── db_controller.go
+│   │   ├── <strong><span style="color: orange">queries</span></strong>
+│   │   │   └── queries.sql
+│   │   ├── <strong><span style="color: orange">schema</span></strong>
+│   │   │   └── schema.sql
+│   │   ├── <strong><span style="color: orange">sqlc</span></strong>
+│   │   │   ├── db.go
+│   │   │   ├── models.go
+│   │   │   └── queries.sql.go
+│   │   └── <strong><span style="color: orange">tests</span></strong>
+│   │       ├── db_mensaje_test.go
+│   │       └── db_usuarios_test.go
+│   ├── <strong><span style="color: orange">handlers</span></strong>
+│   │   ├── mensajes.go
+│   │   └── usuarios.go
+│   └── <strong><span style="color: orange">logic</span></strong>
+│       ├── mensajes.go
+│       └── usuarios.go
+├── Makefile
+├── readme.md
+├── requests.sh
+└── sqlc.yaml
+</pre>
+
+<strong>Reestructuramos el arbol de archivos para:
+- Contener en <strong><span style="color: orange">cmd/server</span></strong> el archivo principal del servidor que contiene los endpoints de la API para cada entidad.
+
+- Contener en <strong><span style="color: orange">internal/db</span></strong> toda la logica asociada al manejo de la base de datos incluyendo el controlador y sus respectivos tests de persistencia.
+
+- Contener en <strong><span style="color: orange">internal/handlers</span></strong> toda la logica asociada al manejo de consultas a la API para las entidades usuarios y mensajes por separado.
+
+- Contener en <strong><span style="color: orange">internal/logic</span></strong> toda la logica asociada a los chequeos de negocio como la verificacion de campos vacios.
 
 ---
 
@@ -102,9 +140,6 @@ A través de `sqlc`, se implementaron las siguientes operaciones sobre la entida
 
 ---
 
-## Funcionalidades Básicas del Sistema - Interaccion con webservice
-
-El servidor expone endpoints básicos para la interacción con la interfaz de usuario, conectando el frontend con la base de datos mediante la capa generada por `sqlc`.
 
 ### Conexión a la Base de Datos (`main.go`)
 
@@ -138,6 +173,10 @@ El sistema expone una API RESTful
 | `GET` | `/api/mensajes/{id}` | Obtiene un mensaje específico. |
 | `PUT` | `/api/mensajes/{id}` | Actualización de los mensajes. |
 | `DELETE` | `/api/mensajes/{id}` | Elimina un mensaje por su ID. |
+
+La intencion de esto es dividir aquellas consultas que no necesitan de, en este caso, un identificador como `create` o `getAll` de las que si lo necesitan como `get`, `update` y `delete`.
+
+Asi, dada la ruta especificada, construimos un `handler` para cada tipo de direccion para cada entidad. Por ejemplo, para usuarios, tenemos `UsuariosAPIHandler` asociado a `api/usuarios` que se encarga de redirigir a la operacion de creacion u obtencion total segun el metodo `http` provisto (POST o GET). Luego, tenemos `UsuarioAPIHandler` asociado a `api/usuarios/` que se encarga de extraer el id de la URL y redirigir a la operacion de actualizacion, obtencion por id o eliminacion segun el metodo `http` provisto (GET, UPDATE o DELETE).
 
 ---
 

@@ -102,7 +102,7 @@ Cada mensaje tiene asociado un usuario y puede llegar a tener un mensaje al que 
 └── sqlc.yaml
 </pre>
 
-<strong>Reestructuramos el arbol de archivos para:
+<strong>Reestructuramos el arbol de archivos para:</strong>
 - Contener en <strong><span style="color: orange">cmd/server</span></strong> el archivo principal del servidor que contiene los endpoints de la API para cada entidad.
 
 - Contener en <strong><span style="color: orange">internal/db</span></strong> toda la logica asociada al manejo de la base de datos incluyendo el controlador y sus respectivos tests de persistencia.

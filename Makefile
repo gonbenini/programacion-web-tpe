@@ -35,6 +35,8 @@ clean:
 # 5.    Ejecuta los tests.
 test: generate
 	docker compose run --rm webserver go test -v ./internal/db/tests
+	@docker compose stop >/dev/null 2>&1
+	@$(MAKE) down >/dev/null 2>&1
 # Usamos 'docker compose run' para levantar un contenedor efímero basado en la configuración de 'webserver'.
 # Como 'webserver' depende de 'db' (depends_on), Docker Compose se asegurará de que la BD esté levantada antes de correr los tests.
 # Al usar --rm, el contenedor efímero donde corrieron los tests se elimina automáticamente al terminar.
@@ -49,4 +51,5 @@ test-api: generate
 	@./requests.sh
 	@docker compose stop >/dev/null 2>&1
 	@$(MAKE) down >/dev/null 2>&1
-# Es buena practica en vez de hacer `@make down &>/dev/null`, usar `$(MAKE)`
+
+# Es buena practica en vez de hacer `@make down &>/dev/null`, usar `$(MAKE)

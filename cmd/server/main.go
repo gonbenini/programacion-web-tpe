@@ -30,20 +30,8 @@ func main() {
 
 	port := ":8080"
 
-	http.HandleFunc("/api/usuarios", func(w http.ResponseWriter, r *http.Request) {
-		handlers.UsuariosAPIHandler(w, r, queries)
-	})
-
-	http.HandleFunc("/api/usuarios/", func(w http.ResponseWriter, r *http.Request) {
-		handlers.UsuarioAPIHandler(w, r, queries)
-	})
-
-	http.HandleFunc("/api/mensajes", func(w http.ResponseWriter, r *http.Request) {
-		handlers.MensajesAPIHandler(w, r, queries)
-	})
-
-	http.HandleFunc("/api/mensajes/", func(w http.ResponseWriter, r *http.Request) {
-		handlers.MensajeAPIHandler(w, r, queries)
+	http.HandleFunc("/usuarios", func(w http.ResponseWriter, r *http.Request) {
+		handlers.UsuariosPageHandler(w, r, queries)
 	})
 
 	fmt.Printf("Servidor con formulario escuchando en http://localhost%s\n", port)

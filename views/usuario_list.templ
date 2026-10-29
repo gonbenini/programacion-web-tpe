@@ -1,0 +1,55 @@
+package views
+
+import (
+	"fmt"
+	sqlc "foro/internal/db/sqlc"
+)
+
+templ UsuarioList(usuarios []sqlc.ListUsersRow) {
+	<section class="panel-box">
+		<h3>Listado de Usuarios</h3>
+		if len(usuarios) == 0 {
+			<p>No hay usuarios registrados.</p>
+		} else {
+			<div class="overflow-auto">
+				<table>
+					<thead>
+						<tr>
+							<th>ID</th>
+							<th>Nombre</th>
+							<th>Mail</th>
+							<th>Acciones</th>
+						</tr>
+					</thead>
+					<tbody>
+						for _, u := range usuarios {
+							<tr>
+								<td>{ fmt.Sprintf("%d", u.IDUsuario) }</td>
+								<td>{ u.Nombre }</td>
+								<td>{ u.Mail }</td>
+								<td>
+									<div class="acciones-cell">
+										<details>
+											<summary role="button" class="secondary outline">Editar</summary>
+											<form method="POST" action="/usuarios/editar" style="margin-top: 0.5rem; min-width: 220px;">
+												<input type="hidden" name="id_usuario" value={ fmt.Sprintf("%d", u.IDUsuario) }/>
+												<input type="text" name="nombre" value={ u.Nombre } placeholder="Nombre" required/>
+												<input type="email" name="mail" value={ u.Mail } placeholder="Mail" required/>
+												<input type="password" name="contrasenia" placeholder="Nueva contraseña (opcional)"/>
+												<button type="submit">Guardar</button>
+											</form>
+										</details>
+										<form method="POST" action="/usuarios/eliminar" class="inline-form">
+											<input type="hidden" name="id_usuario" value={ fmt.Sprintf("%d", u.IDUsuario) }/>
+											<button type="submit" class="contrast">Borrar</button>
+										</form>
+									</div>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		}
+	</section>
+}

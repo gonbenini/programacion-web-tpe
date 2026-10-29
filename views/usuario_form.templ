@@ -1,0 +1,22 @@
+package views
+
+templ UsuarioForm() {
+	<aside class="panel-box">
+		<h3>Crear Usuario</h3>
+		<form method="POST" action="/usuarios">
+			<label for="nombre">
+				Nombre
+				<input type="text" id="nombre" name="nombre" placeholder="Ej: Gon" required/>
+			</label>
+			<label for="mail">
+				Email
+				<input type="email" id="mail" name="mail" placeholder="usuario@test.com" required/>
+			</label>
+			<label for="contrasenia">
+				Contraseña
+				<input type="password" id="contrasenia" name="contrasenia" placeholder="••••••" required/>
+			</label>
+			<button type="submit">Crear</button>
+		</form>
+	</aside>
+}

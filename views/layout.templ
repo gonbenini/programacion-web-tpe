@@ -1,0 +1,57 @@
+package views
+
+templ Layout(title string) {
+	<!DOCTYPE html>
+	<html lang="es" data-theme="light">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>{ title }</title>
+			<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"/>
+			<style>
+				.main-grid {
+					display: grid;
+					grid-template-columns: 2fr 1fr;
+					gap: 2rem;
+					align-items: start;
+				}
+				.panel-box {
+					border: 1px solid #d1d5db;
+					border-radius: 8px;
+					padding: 1.5rem;
+					background: #ffffff;
+				}
+				.acciones-cell {
+					display: flex;
+					gap: 0.5rem;
+					align-items: center;
+				}
+				.inline-form {
+					margin: 0;
+				}
+				@media (max-width: 900px) {
+					.main-grid {
+						grid-template-columns: 1fr;
+					}
+				}
+			</style>
+		</head>
+		<body>
+			<header class="container">
+				<nav>
+					<ul>
+						<li><strong>Foro - Trabajo de Cursada</strong></li>
+					</ul>
+					<ul>
+						<li><a href="/usuarios">Usuarios</a></li>
+						<li><a href="/mensajes">Mensajes</a></li>
+					</ul>
+				</nav>
+				<hr/>
+			</header>
+			<main class="container">
+				{ children... }
+			</main>
+		</body>
+	</html>
+}

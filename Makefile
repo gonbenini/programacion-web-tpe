@@ -4,6 +4,7 @@
 # 1.	Genera el código de Go leyendo el schema y queries antes de que Docker Compose se levante, los contenedores dependen de estos assets.
 generate:
 	@docker run --rm -v "$(shell pwd):/src" -w /src sqlc/sqlc generate >/dev/null
+	@docker run --rm -v "$(shell pwd):/src" -w /src ghcr.io/a-h/templ:latest generate >/dev/null
 # --rm (remove): docker borra el contenedor en cuanto termina de ejecutar el comando.
 # -v (mapear volumen): pasamos codigo que queremos ejecutar adentro del contenedor.
 # -w /src (workdir): carpeta donde estara parada la terminal cuando empiece a ejecutar el contendor, no es necesario pero facilita ubicarnos.

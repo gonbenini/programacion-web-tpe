@@ -30,8 +30,27 @@ func main() {
 
 	port := ":8080"
 
-	http.HandleFunc("/usuarios", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		handlers.UsuariosPageHandler(w, r, queries)
+	})
+
+	http.HandleFunc("/usuarios", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			handlers.UsuariosPageHandler(w, r, queries)
+		case http.MethodPost:
+			handlers.CrearUsuarioWebHandler(w, r, queries)
+		default:
+			http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
+		}
+	})
+
+	http.HandleFunc("/usuarios/editar", func(w http.ResponseWriter, r *http.Request) {
+		handlers.EditarUsuarioWebHandler(w, r, queries)
+	})
+
+	http.HandleFunc("/usuarios/eliminar", func(w http.ResponseWriter, r *http.Request) {
+		handlers.EliminarUsuarioWebHandler(w, r, queries)
 	})
 
 	fmt.Printf("Servidor con formulario escuchando en http://localhost%s\n", port)

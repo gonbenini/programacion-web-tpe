@@ -17,14 +17,14 @@ func MensajesPageHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Q
 		return
 	}
 
-	usuarios, err := queries.ListMensajes(r.Context())
+	mensajes, err := queries.ListMensajes(r.Context())
 	if err != nil {
-		http.Error(w, "Error al obtener usuarios: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Error al obtener mensajes: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := views.MensajesPage(usuarios).Render(r.Context(), w); err != nil {
+	if err := views.MensajesPage(mensajes).Render(r.Context(), w); err != nil {
 		http.Error(w, "Error al renderizar vista: "+err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -70,7 +70,6 @@ func CrearMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 	}
 
 	respuestaSQL := sql.NullInt32{Valid: false}
-
 	if respuesta != nil {
 		respuestaSQL = sql.NullInt32{
 			Int32: *respuesta,
@@ -85,6 +84,111 @@ func CrearMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 	})
 	if err != nil {
 		http.Error(w, "Error al crear mensaje: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/mensajes", http.StatusSeeOther)
+}
+
+func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
+	//Actualiza un usuario y redirige a GET
+	if r.Method != http.MethodPost {
+		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Error al procesar el formulario", http.StatusBadRequest)
+		return
+	}
+
+	id64, err := strconv.ParseInt(r.FormValue("id_mensaje"), 10, 32)
+	if err != nil {
+		http.Error(w, "ID de mensaje inválido", http.StatusBadRequest)
+		return
+	}
+
+	var usuario *int32
+	if r.FormValue("id_usuario") != "" {
+		valor, err := strconv.ParseInt(r.FormValue("id_usuario"), 10, 32)
+		if err != nil {
+			http.Error(w, "Respuesta inválida", http.StatusBadRequest)
+			return
+		}
+		usuarioInt := int32(valor)
+		usuario = &usuarioInt
+	}
+
+	usuarioSQL := sql.NullInt32{Valid: false}
+	if usuario != nil {
+		usuarioSQL = sql.NullInt32{
+			Int32: *usuario,
+			Valid: true,
+		}
+	}
+
+	var respuesta *int32
+	if r.FormValue("id_respuesta_a_mensaje") != "" {
+		valor, err := strconv.ParseInt(r.FormValue("id_respuesta_a_mensaje"), 10, 32)
+		if err != nil {
+			http.Error(w, "Respuesta inválida", http.StatusBadRequest)
+			return
+		}
+		respuestaInt := int32(valor)
+		respuesta = &respuestaInt
+	}
+
+	respuestaSQL := sql.NullInt32{Valid: false}
+	if respuesta != nil {
+		respuestaSQL = sql.NullInt32{
+			Int32: *respuesta,
+			Valid: true,
+		}
+	}
+
+	var meGusta *int32
+	if r.FormValue("me_gusta") != "" {
+		valor, err := strconv.ParseInt(r.FormValue("me_gusta"), 10, 32)
+		if err != nil {
+			http.Error(w, "Respuesta inválida", http.StatusBadRequest)
+			return
+		}
+		meGustaInt := int32(valor)
+		meGusta = &meGustaInt
+	}
+
+	meGustaSQL := sql.NullInt32{Valid: false}
+	if meGusta != nil {
+		meGustaSQL = sql.NullInt32{
+			Int32: *meGusta,
+			Valid: true,
+		}
+	}
+
+	texto := r.FormValue("texto")
+
+	reqUpdate := logic.EditarMensaje{
+		IdUsuario: usuario,
+		IdRespuestaAMensaje: respuesta,
+		Texto: &texto,
+		MeGusta: meGusta,
+	}
+
+	if err := logic.ValidarEdicionMensaje(reqUpdate); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = queries.UpdateMensaje(r.Context(), sqlc.UpdateMensajeParams{
+		IDMensaje: int32(id64),
+		IDUsuario: usuarioSQL,
+		IDRespuestaAMensaje: respuestaSQL,
+		Texto: texto,
+		MeGusta: meGustaSQL,
+	})
+
+	if err != nil {
+		http.Error(w, "Error al actualizar mensaje: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 

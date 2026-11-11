@@ -57,7 +57,7 @@ templ MensajeList(mensajes []sqlc.Mensaje) {
 												<input type="hidden" name="id_mensaje" value={ m.IDMensaje }/>
 												<input type="number" name="id_usuario" value={ idUsuario } placeholder="Usuario" required/>
 												<input type="number" name="id_respuesta_a_mensaje" value={ idRespuestaAmensaje } placeholder="Respuesta a"/>
-												<input type="text" name="texto" value={ m.Texto } placeholder="Texto" required/>
+												<input type="text" name="texto" value={ m.Texto } required/>
 												<input type="number" name="me_gusta" value={ meGusta }/>
 												<button type="submit">Guardar</button>
 											</form>

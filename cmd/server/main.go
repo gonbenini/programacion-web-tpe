@@ -60,6 +60,10 @@ func main() {
 		handlers.EditarUsuarioWebHandler(w, r, queries)
 	})
 
+	http.HandleFunc("/mensajes/editar", func(w http.ResponseWriter, r *http.Request) {
+		handlers.EditarMensajeWebHandler(w, r, queries)
+	})
+
 	http.HandleFunc("/usuarios/eliminar", func(w http.ResponseWriter, r *http.Request) {
 		handlers.EliminarUsuarioWebHandler(w, r, queries)
 	})

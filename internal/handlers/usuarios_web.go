@@ -195,6 +195,32 @@ func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 	http.Redirect(w, r, "/mensajes", http.StatusSeeOther)
 }
 
+func EliminarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
+	// Elimina el mensaje y redirige a GET
+
+	if r.Method != http.MethodPost {
+		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Error al procesar el formulario", http.StatusBadRequest)
+		return
+	}
+
+	id64, err := strconv.ParseInt(r.FormValue("id_mensaje"), 10, 32)
+	if err != nil {
+		http.Error(w, "ID de usuario inválido", http.StatusBadRequest)
+		return
+	}
+	if err := queries.DeleteMensaje(r.Context(), int32(id64)); err != nil {
+		http.Error(w, "Error al eliminar mensaje: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/mensajes", http.StatusSeeOther)
+}
+
 func UsuariosPageHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
 	// Obtiene la lista con ListUsers y renderiza la vista completa
 

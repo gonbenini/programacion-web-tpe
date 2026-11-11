@@ -68,6 +68,10 @@ func main() {
 		handlers.EliminarUsuarioWebHandler(w, r, queries)
 	})
 
+	http.HandleFunc("/mensajes/eliminar", func(w http.ResponseWriter, r *http.Request) {
+		handlers.EliminarMensajeWebHandler(w, r, queries)
+	})
+
 	fmt.Printf("Servidor con formulario escuchando en http://localhost%s\n", port)
 
 	err = http.ListenAndServe(port, nil)

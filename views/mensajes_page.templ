@@ -1,0 +1,13 @@
+package views
+
+import sqlc "foro/internal/db/sqlc"
+
+templ MensajesPage (mensajes []sqlc.Mensaje) {
+	@Layout("Gestión de Mensajes") {
+		<h1>Mensajes</h1>
+		<div class="main-grid">
+			@MensajeList(mensajes)
+			@MensajeForm()
+		</div>
+	}
+}

@@ -1,0 +1,22 @@
+package views
+
+templ MensajeForm() {
+	<aside class="panel-box">
+		<h3>Crear Mensaje</h3>
+		<form method="POST" action="/mensajes">
+			<label for="usuario">
+				Usuario
+				<input type="text" id="usuario" name="usuario" placeholder="Ej: 23" required/>
+			</label>
+			<label for="respuesta_a">
+				Respuesta a mensaje
+				<input type="text" id="respuesta" name="respuesta" placeholder="11"/>
+			</label>
+			<label for="texto">
+				Texto
+				<input type="text" id="texto" name="texto" placeholder="Me gusta templ..." required/>
+			</label>
+			<button type="submit">Crear</button>
+		</form>
+	</aside>
+}

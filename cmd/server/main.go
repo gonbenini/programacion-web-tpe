@@ -45,6 +45,17 @@ func main() {
 		}
 	})
 
+	http.HandleFunc("/mensajes", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			handlers.MensajesPageHandler(w, r, queries)
+		case http.MethodPost:
+			handlers.CrearMensajeWebHandler(w, r, queries)
+		default:
+			http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
+		}
+	})
+
 	http.HandleFunc("/usuarios/editar", func(w http.ResponseWriter, r *http.Request) {
 		handlers.EditarUsuarioWebHandler(w, r, queries)
 	})

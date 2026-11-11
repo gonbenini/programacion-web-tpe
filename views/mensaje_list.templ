@@ -1,0 +1,78 @@
+
+package views
+
+import (
+	sqlc "foro/internal/db/sqlc"
+)
+
+templ MensajeList(mensajes []sqlc.Mensaje) {
+	<section class="panel-box">
+		<h3>Listado de Mensajes</h3>
+		if len(mensajes) == 0 {
+			<p>No hay mensajes registrados.</p>
+		} else {
+			<div class="overflow-auto">
+				<table>
+					<thead>
+						<tr>
+							<th>ID</th>
+							<th>Autor</th>
+							<th>Respuesta a</th>
+							<th>Texto</th>
+							<th>Me gusta</th>
+							<th>Acciones</th>
+						</tr>
+					</thead>
+					<tbody>
+						for _, m := range mensajes {
+							 {{
+								idUsuario := int32(-1)
+								idRespuestaAmensaje := int32(-1)
+								meGusta := int32(0)
+
+								if m.IDUsuario.Valid {
+									idUsuario = m.IDUsuario.Int32
+								}
+
+								if m.IDRespuestaAMensaje.Valid {
+									idRespuestaAmensaje = m.IDRespuestaAMensaje.Int32
+								}
+
+								if m.MeGusta.Valid {
+									meGusta = m.MeGusta.Int32
+								}
+							}}
+
+							<tr>
+								<td>{ m.IDMensaje }</td>
+								<td>{ idUsuario }</td>
+								<td>{ idRespuestaAmensaje }</td>
+								<td>{ m.Texto }</td>
+								<td>{ meGusta }</td>
+								<td>
+									<div class="acciones-cell">
+										<details>
+											<summary role="button" class="secondary outline">Editar</summary>
+											<form method="POST" action="/mensajes/editar" style="margin-top: 0.5rem; min-width: 220px;">
+												<input type="hidden" name="id_mensaje" value={ m.IDMensaje }/>
+												<input type="number" name="id_usuario" value={ idUsuario } placeholder="Usuario" required/>
+												<input type="number" name="id_respuesta_a_mensaje" value={ idRespuestaAmensaje } placeholder="Respuesta a"/>
+												<input type="text" name="texto" value={ m.Texto } placeholder="Texto" required/>
+												<input type="number" name="me_gusta" value={ meGusta }/>
+												<button type="submit">Guardar</button>
+											</form>
+										</details>
+										<form method="POST" action="/mensajes/eliminar" class="inline-form">
+											<input type="hidden" name="id_mensaje" value={ m.IDMensaje }/>
+											<button type="submit" class="contrast">Borrar</button>
+										</form>
+									</div>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		}
+	</section>
+}

@@ -19,9 +19,7 @@ func MensajesPageHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Q
 
 	mensajes, err := queries.ListMensajes(r.Context())
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		mensajes, _ := queries.ListMensajes(r.Context())
-    	views.MensajesPage(mensajes, "error al obtener mensajes").Render(r.Context(), w)
+		http.Error(w, "Error al obtener mensajes", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -48,7 +46,7 @@ func CrearMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		mensajes, _ := queries.ListMensajes(r.Context())
-    	views.MensajesPage(mensajes, "Usuario invalido").Render(r.Context(), w)
+    	views.MensajesPage(mensajes, "Usuario invalido - " + err.Error()).Render(r.Context(), w)
 		return
 	}
 
@@ -59,7 +57,7 @@ func CrearMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			mensajes, _ := queries.ListMensajes(r.Context())
-			views.MensajesPage(mensajes, "Respuesta a mensaje inválida").Render(r.Context(), w)
+			views.MensajesPage(mensajes, "Respuesta a mensaje inválida - " + err.Error()).Render(r.Context(), w)
 			return
 		}
 		respuestaInt := int32(valor)
@@ -87,12 +85,6 @@ func CrearMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 		return
 	}
 
-	_, err = queries.GetUserById(r.Context(), req.IdUsuario)
-	if err != nil {
-		http.Error(w, "El id_usuario no existe", http.StatusBadRequest)
-		return
-	}
-
 	_, err = queries.CreateMensaje(r.Context(), sqlc.CreateMensajeParams{
 		IDUsuario: sql.NullInt32{Int32: req.IdUsuario, Valid: true,},
 		IDRespuestaAMensaje: respuestaSQL,
@@ -101,7 +93,7 @@ func CrearMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		mensajes, _ := queries.ListMensajes(r.Context())
-    	views.MensajesPage(mensajes, "Error al crear mensaje: "+err.Error()).Render(r.Context(), w)
+    	views.MensajesPage(mensajes, "Error al crear mensaje: " + err.Error()).Render(r.Context(), w)
 		return
 	}
 
@@ -116,9 +108,7 @@ func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 	}
 
 	if err := r.ParseForm(); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		mensajes, _ := queries.ListMensajes(r.Context())
-    	views.MensajesPage(mensajes, "Error al procesar formulario").Render(r.Context(), w)
+		http.Error(w, "Error al procesar el formulario", http.StatusBadRequest)
 		return
 	}
 
@@ -126,7 +116,7 @@ func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		mensajes, _ := queries.ListMensajes(r.Context())
-    	views.MensajesPage(mensajes, "ID de mensaje invalido").Render(r.Context(), w)
+    	views.MensajesPage(mensajes, "ID de mensaje invalido - " + err.Error()).Render(r.Context(), w)
 		return
 	}
 
@@ -136,7 +126,7 @@ func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			mensajes, _ := queries.ListMensajes(r.Context())
-			views.MensajesPage(mensajes, "ID de usuario invalido").Render(r.Context(), w)
+			views.MensajesPage(mensajes, "ID de usuario invalido - " + err.Error()).Render(r.Context(), w)
 			return
 		}
 		usuarioInt := int32(valor)
@@ -157,7 +147,7 @@ func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 		if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		mensajes, _ := queries.ListMensajes(r.Context())
-    	views.MensajesPage(mensajes, "ID de respuesta invalido").Render(r.Context(), w)
+    	views.MensajesPage(mensajes, "ID de respuesta invalido - " + err.Error()).Render(r.Context(), w)
 		return
 		}
 		respuestaInt := int32(valor)
@@ -178,7 +168,7 @@ func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 		if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		mensajes, _ := queries.ListMensajes(r.Context())
-    	views.MensajesPage(mensajes, "ID de me gusta invalido").Render(r.Context(), w)
+    	views.MensajesPage(mensajes, "ID de me gusta invalido - " + err.Error()).Render(r.Context(), w)
 		return
 		}
 		meGustaInt := int32(valor)
@@ -207,14 +197,6 @@ func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 		mensajes, _ := queries.ListMensajes(r.Context())
     	views.MensajesPage(mensajes, err.Error()).Render(r.Context(), w)
 		return
-	}
-
-	if usuario != nil {
-		_, err := queries.GetUserById(r.Context(), *usuario)
-		if err != nil {
-			http.Error(w, "El id_usuario no existe", http.StatusBadRequest)
-			return
-		}
 	}
 
 	err = queries.UpdateMensaje(r.Context(), sqlc.UpdateMensajeParams{
@@ -252,13 +234,13 @@ func EliminarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		mensajes, _ := queries.ListMensajes(r.Context())
-    	views.MensajesPage(mensajes, "ID de mensaje invalido").Render(r.Context(), w)
+    	views.MensajesPage(mensajes, "ID de mensaje invalido - " + err.Error()).Render(r.Context(), w)
 		return
 	}
 	if err := queries.DeleteMensaje(r.Context(), int32(id64)); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		mensajes, _ := queries.ListMensajes(r.Context())
-    	views.MensajesPage(mensajes, "error al eliminar mensaje").Render(r.Context(), w)
+    	views.MensajesPage(mensajes, "error al eliminar mensaje - " + err.Error()).Render(r.Context(), w)
 		return
 	}
 
@@ -275,7 +257,7 @@ func UsuariosPageHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Q
 
 	usuarios, err := queries.ListUsers(r.Context())
 	if err != nil {
-		http.Error(w, "Error al obtener usuarios: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Error al obtener usuarios", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -305,7 +287,9 @@ func CrearUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 	}
 
 	if err := logic.ValidarUsuario(nuevo); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		usuarios, _ := queries.ListUsers(r.Context())
+    	views.UsuariosPage(usuarios, "Usuario inválido - " + err.Error()).Render(r.Context(), w)
 		return
 	}
 
@@ -315,7 +299,9 @@ func CrearUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 		Contrasenia: nuevo.Contrasenia,
 	})
 	if err != nil {
-		http.Error(w, "Error al crear usuario: "+err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
+		usuarios, _ := queries.ListUsers(r.Context())
+    	views.UsuariosPage(usuarios, "Error al crear usuario - " + err.Error()).Render(r.Context(), w)
 		return
 	}
 
@@ -336,7 +322,9 @@ func EditarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 
 	id64, err := strconv.ParseInt(r.FormValue("id_usuario"), 10, 32)
 	if err != nil {
-		http.Error(w, "ID de usuario inválido", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		usuarios, _ := queries.ListUsers(r.Context())
+    	views.UsuariosPage(usuarios, "ID de usuario inválido - " + err.Error()).Render(r.Context(), w)
 		return
 	}
 
@@ -353,7 +341,9 @@ func EditarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 	}
 
 	if err := logic.ValidarUpdateUsuario(reqUpdate); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		usuarios, _ := queries.ListUsers(r.Context())
+    	views.UsuariosPage(usuarios, "Usuario inválido - " + err.Error()).Render(r.Context(), w)
 		return
 	}
 
@@ -374,7 +364,9 @@ func EditarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 	}
 
 	if err != nil {
-		http.Error(w, "Error al actualizar usuario: "+err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
+		usuarios, _ := queries.ListUsers(r.Context())
+    	views.UsuariosPage(usuarios, "Error al actualizar usuario - " + err.Error()).Render(r.Context(), w)
 		return
 	}
 
@@ -396,12 +388,16 @@ func EliminarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *
 
 	id64, err := strconv.ParseInt(r.FormValue("id_usuario"), 10, 32)
 	if err != nil {
-		http.Error(w, "ID de usuario inválido", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		usuarios, _ := queries.ListUsers(r.Context())
+    	views.UsuariosPage(usuarios, "ID de usuario inválido - " + err.Error()).Render(r.Context(), w)
 		return
 	}
 
 	if err := queries.DeleteUser(r.Context(), int32(id64)); err != nil {
-		http.Error(w, "Error al eliminar usuario: "+err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
+		usuarios, _ := queries.ListUsers(r.Context())
+    	views.UsuariosPage(usuarios, "Error al eliminar usuario - " + err.Error()``).Render(r.Context(), w)
 		return
 	}
 

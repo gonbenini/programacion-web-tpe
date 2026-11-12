@@ -79,6 +79,12 @@ func CrearMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 		return
 	}
 
+	_, err = queries.GetUserById(r.Context(), req.IdUsuario)
+	if err != nil {
+		http.Error(w, "El id_usuario no existe", http.StatusBadRequest)
+		return
+	}
+
 	_, err = queries.CreateMensaje(r.Context(), sqlc.CreateMensajeParams{
 		IDUsuario: sql.NullInt32{Int32: req.IdUsuario, Valid: true,},
 		IDRespuestaAMensaje: respuestaSQL,
@@ -191,6 +197,14 @@ func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 		mensajes, _ := queries.ListMensajes(r.Context())
     	views.MensajesPage(mensajes, err.Error()).Render(r.Context(), w)
 		return
+	}
+
+	if usuario != nil {
+		_, err := queries.GetUserById(r.Context(), *usuario)
+		if err != nil {
+			http.Error(w, "El id_usuario no existe", http.StatusBadRequest)
+			return
+		}
 	}
 
 	err = queries.UpdateMensaje(r.Context(), sqlc.UpdateMensajeParams{

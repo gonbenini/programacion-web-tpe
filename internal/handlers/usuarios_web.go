@@ -19,7 +19,9 @@ func MensajesPageHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Q
 
 	mensajes, err := queries.ListMensajes(r.Context())
 	if err != nil {
-		http.Error(w, "Error al obtener mensajes: "+err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
+		mensajes, _ := queries.ListMensajes(r.Context())
+    	views.MensajesPage(mensajes, "error al obtener mensajes").Render(r.Context(), w)
 		return
 	}
 
@@ -44,7 +46,9 @@ func CrearMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 	//parseamos sin preguntar si es vacio ya que es requerido en el formulario
 	usuario, err := strconv.ParseInt(r.FormValue("usuario"), 10, 32)
 	if err != nil {
-		http.Error(w, "Usuario inválido", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		mensajes, _ := queries.ListMensajes(r.Context())
+    	views.MensajesPage(mensajes, "Usuario invalido").Render(r.Context(), w)
 		return
 	}
 
@@ -53,7 +57,9 @@ func CrearMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 	if r.FormValue("respuesta") != "" {
 		valor, err := strconv.ParseInt(r.FormValue("respuesta"), 10, 32)
 		if err != nil {
-			http.Error(w, "Respuesta inválida", http.StatusBadRequest)
+			w.WriteHeader(http.StatusBadRequest)
+			mensajes, _ := queries.ListMensajes(r.Context())
+			views.MensajesPage(mensajes, "Respuesta a mensaje inválida").Render(r.Context(), w)
 			return
 		}
 		respuestaInt := int32(valor)
@@ -75,7 +81,9 @@ func CrearMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 	}
 
 	if err := logic.ValidarMensaje(req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		mensajes, _ := queries.ListMensajes(r.Context())
+    	views.MensajesPage(mensajes, err.Error()).Render(r.Context(), w)
 		return
 	}
 
@@ -91,7 +99,9 @@ func CrearMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 		Texto: req.Texto,
 	})
 	if err != nil {
-		http.Error(w, "Error al crear mensaje: "+err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		mensajes, _ := queries.ListMensajes(r.Context())
+    	views.MensajesPage(mensajes, "Error al crear mensaje: "+err.Error()).Render(r.Context(), w)
 		return
 	}
 
@@ -108,7 +118,7 @@ func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 	if err := r.ParseForm(); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		mensajes, _ := queries.ListMensajes(r.Context())
-    	views.MensajesPage(mensajes, "Error al procesador formulario").Render(r.Context(), w)
+    	views.MensajesPage(mensajes, "Error al procesar formulario").Render(r.Context(), w)
 		return
 	}
 
@@ -240,11 +250,15 @@ func EliminarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *
 
 	id64, err := strconv.ParseInt(r.FormValue("id_mensaje"), 10, 32)
 	if err != nil {
-		http.Error(w, "ID de mensaje inválido", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		mensajes, _ := queries.ListMensajes(r.Context())
+    	views.MensajesPage(mensajes, "ID de mensaje invalido").Render(r.Context(), w)
 		return
 	}
 	if err := queries.DeleteMensaje(r.Context(), int32(id64)); err != nil {
-		http.Error(w, "Error al eliminar mensaje: "+err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
+		mensajes, _ := queries.ListMensajes(r.Context())
+    	views.MensajesPage(mensajes, "error al eliminar mensaje").Render(r.Context(), w)
 		return
 	}
 

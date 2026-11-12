@@ -21,6 +21,12 @@ El objetivo es desarrollar una aplicación web a partir de un dominio simple, ap
 - [Ejecución rápida](#-ejecución-rápida)
 - [Requisitos](#requisitos)
 - [Comandos disponibles](#comandos-disponibles)
+- [Uso de la aplicación](#uso-de-la-aplicación)
+  - [Pantalla general](#pantalla-general)
+  - [Usuarios](#usuarios)
+  - [Mensajes](#mensajes)
+  - [Errores](#errores)
+  - [Recorrido de ejemplo](#recorrido-de-ejemplo)
 - [Introducción](#introducción)
   - [Dominio elegido](#dominio-elegido)
   - [Modelo de datos](#modelo-de-datos)
@@ -98,6 +104,119 @@ Todos los comandos se ejecutan desde la carpeta raíz del proyecto (la que conti
 **Tareas posteriores**
 
 7. Al presionar `Ctrl+C` (o si el servidor termina por cualquier motivo), `docker compose down -v` borra los contenedores y volúmenes.
+
+---
+
+## Uso de la aplicación
+
+Con la aplicación levantada (`make up`), abrir **http://localhost:8080** en el navegador.
+
+### Pantalla general
+
+```text
+┌──────────────────────────────────────────────────────────────────┐
+│ Foro - Trabajo de Cursada                  Usuarios    Mensajes  │  ← barra de navegación
+├──────────────────────────────────────────────────────────────────┤
+│ [ recuadro rojo con el error, solo si algo falló ]               │
+│                                                                  │
+│ ┌─ Listado ─────────────────────────────┐  ┌─ Crear ──────────┐  │
+│ │ ID │ ...datos... │ [Editar] [Borrar]  │  │ campos           │  │
+│ │ ID │ ...datos... │ [Editar] [Borrar]  │  │ [Crear]          │  │
+│ └───────────────────────────────────────┘  └──────────────────┘  │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+- La **barra de navegación** permite pasar de una sección a otra. La página de inicio es **Usuarios**.
+- Cada sección tiene el **listado** a la izquierda y el **formulario de alta** a la derecha. En pantallas angostas (celulares) el formulario aparece debajo del listado.
+- Después de crear, editar o borrar, la página se recarga sola y el listado muestra los datos actualizados.
+- Los datos se guardan en la base mientras la aplicación está levantada. Al detenerla con `Ctrl+C` se borran, y la próxima ejecución arranca vacía.
+
+### Usuarios
+
+**Crear un usuario**
+
+1. En el panel **Crear Usuario**, completar **Nombre**, **Email** y **Contraseña**. Los tres campos son obligatorios y el email tiene que tener formato válido.
+2. Presionar **Crear**. El usuario aparece en el listado con su **ID**, que se usa después para crear mensajes.
+
+No puede haber dos usuarios con el mismo email.
+
+**Editar un usuario**
+
+1. En la fila del usuario, presionar **Editar**. Se despliega un formulario con los datos actuales.
+2. Modificar **nombre** y/o **mail**. El campo **Nueva contraseña** es opcional: si se deja vacío, la contraseña no cambia.
+3. Presionar **Guardar**. Para cerrar el formulario sin guardar, presionar **Editar** de nuevo.
+
+**Borrar un usuario**
+
+Presionar **Borrar** en la fila del usuario.
+
+- ⚠️ El borrado es **inmediato y sin confirmación**.
+- Los mensajes que escribió ese usuario **no se borran**: quedan sin autor (la columna **Autor** aparece vacía).
+
+### Mensajes
+
+**Crear un mensaje**
+
+1. Ir a **Mensajes** en la barra de navegación.
+2. En el panel **Crear Mensaje**, completar:
+   - **Usuario**: el **ID** del autor, tal como figura en el listado de Usuarios. Obligatorio.
+   - **Respuesta a mensaje**: el **ID** del mensaje al que se responde. Se deja **vacío** si el mensaje no responde a otro.
+   - **Texto**: el contenido del mensaje. Obligatorio.
+3. Presionar **Crear**.
+
+**Leer el listado**
+
+| Columna | Significado |
+| :--- | :--- |
+| **ID** | Identificador del mensaje. Se usa para responderlo. |
+| **Autor** | ID del usuario que lo escribió. Vacío si ese usuario fue borrado. |
+| **Respuesta a** | ID del mensaje al que responde. Vacío si es un mensaje inicial. |
+| **Texto** | Contenido del mensaje. |
+| **Me gusta** | Cantidad de "me gusta". |
+
+Para reconstruir una conversación, seguir la columna **Respuesta a**: un mensaje con `Respuesta a = 1` es una respuesta al mensaje con `ID = 1`.
+
+**Editar un mensaje**
+
+1. En la fila del mensaje, presionar **Editar**. Se despliega un formulario con los datos actuales, en este orden: **Usuario** (ID del autor), **Respuesta a** (ID), **Texto** y **Me gusta**.
+2. Modificar los campos necesarios:
+   - Dejar **Respuesta a** vacío convierte el mensaje en un mensaje inicial.
+   - Dejar **Usuario** vacío deja el mensaje sin autor.
+   - **Me gusta** se edita escribiendo el número; no puede ser negativo.
+3. Presionar **Guardar**.
+
+**Borrar un mensaje**
+
+Presionar **Borrar** en la fila del mensaje.
+
+- ⚠️ El borrado es **inmediato y sin confirmación**.
+- Se borran también **todas sus respuestas**, y las respuestas de esas respuestas (borrado en cascada).
+
+### Errores
+
+Si una acción no se puede realizar, la página muestra un **recuadro rojo** arriba con el motivo, y **los datos no se guardan**. El listado sigue visible debajo.
+
+Casos habituales:
+
+| Situación | Qué pasa |
+| :--- | :--- |
+| Campo obligatorio vacío | El navegador no deja enviar el formulario, o se muestra el error (por ejemplo, *"el texto del mensaje es obligatorio"*). |
+| Email repetido al crear o editar un usuario | Se muestra un error y el usuario no se guarda. |
+| ID de usuario o de mensaje que no existe | Se muestra un error y el mensaje no se guarda. |
+| "Me gusta" negativo | Se muestra *"la cantidad de me gusta no puede ser negativa"*. |
+
+En algunos casos, como un ID inexistente o un email repetido, el texto del error es el que devuelve la base de datos y puede ser técnico.
+
+Después de un error, para seguir usando la aplicación conviene hacer clic en **Usuarios** o **Mensajes** en la barra de navegación. Si se recarga la página con el navegador (`F5`), el navegador ofrece reenviar el formulario fallido.
+
+### Recorrido de ejemplo
+
+1. En **Usuarios**, crear a *Ana* (`ana@mail.com`) y a *Bruno* (`bruno@mail.com`). Quedan con los ID 1 y 2.
+2. En **Mensajes**, crear un mensaje con **Usuario** `1`, **Respuesta a mensaje** vacío y el texto *"¿Alguien usó templ?"*. Queda con ID 1.
+3. Crear otro con **Usuario** `2`, **Respuesta a mensaje** `1` y el texto *"Sí, en el TP5"*. En el listado aparece con **Respuesta a** = 1.
+4. Presionar **Editar** en el mensaje 2, cambiar **Me gusta** a `3` y **Guardar**.
+5. Volver a **Usuarios** y borrar a *Bruno*. En **Mensajes**, el mensaje 2 sigue existiendo, pero con **Autor** vacío.
+6. Borrar el mensaje 1. Desaparece junto con su respuesta, el mensaje 2.
 
 ---
 
@@ -268,8 +387,8 @@ UsuariosPage                         MensajesPage
 ## Manejo de errores
 
 - **Validación de negocio** (`internal/logic`): campos obligatorios vacíos, `me_gusta` negativo, identificadores menores o iguales a 0, etc.
-- **Existencia de datos relacionados**: antes de crear o editar un mensaje se verifica que el usuario indicado exista.
-- **Cómo se informa**: en la sección de mensajes, los errores se muestran en la misma página, en un recuadro de alerta del layout (respuesta `400`). En la sección de usuarios, los errores se devuelven como texto plano.
+- **Integridad de los datos**: las restricciones de la base impiden guardar un mensaje con un usuario o un mensaje respondido inexistentes (claves foráneas) y un usuario con un email repetido (`UNIQUE`).
+- **Cómo se informa**: en ambas secciones el error se muestra en la misma página, en un recuadro de alerta del layout (componente `Layout`, parámetro `err`), junto con el listado. Ver también [Errores](#errores) en el uso de la aplicación.
 
 ---
 
@@ -321,7 +440,7 @@ Genera el código, levanta la base y corre `go test -v ./internal/db/tests` en u
 
 ### Prueba manual de la interfaz
 
-Con la aplicación levantada (`make up`), en **http://localhost:8080**:
+Con la aplicación levantada (`make up`), en **http://localhost:8080**. El paso a paso detallado está en [Recorrido de ejemplo](#recorrido-de-ejemplo).
 
 1. En **Usuarios**, crear uno o más usuarios.
 2. En **Mensajes**, crear un mensaje indicando el ID de un usuario existente.

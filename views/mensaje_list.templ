@@ -2,6 +2,7 @@
 package views
 
 import (
+	"strconv"
 	sqlc "foro/internal/db/sqlc"
 )
 
@@ -26,16 +27,16 @@ templ MensajeList(mensajes []sqlc.Mensaje) {
 					<tbody>
 						for _, m := range mensajes {
 							 {{
-								idUsuario := int32(-1)
-								idRespuestaAmensaje := int32(-1)
+								idUsuario := ""
+								idRespuestaAmensaje := ""
 								meGusta := int32(0)
 
 								if m.IDUsuario.Valid {
-									idUsuario = m.IDUsuario.Int32
+									idUsuario = strconv.Itoa(int(m.IDUsuario.Int32))
 								}
 
 								if m.IDRespuestaAMensaje.Valid {
-									idRespuestaAmensaje = m.IDRespuestaAMensaje.Int32
+									idRespuestaAmensaje = strconv.Itoa(int(m.IDRespuestaAMensaje.Int32))
 								}
 
 								if m.MeGusta.Valid {
@@ -55,7 +56,7 @@ templ MensajeList(mensajes []sqlc.Mensaje) {
 											<summary role="button" class="secondary outline">Editar</summary>
 											<form method="POST" action="/mensajes/editar" style="margin-top: 0.5rem; min-width: 220px;">
 												<input type="hidden" name="id_mensaje" value={ m.IDMensaje }/>
-												<input type="number" name="id_usuario" value={ idUsuario } placeholder="Usuario" required/>
+												<input type="number" name="id_usuario" value={ idUsuario } placeholder="Usuario"/>
 												<input type="number" name="id_respuesta_a_mensaje" value={ idRespuestaAmensaje } placeholder="Respuesta a"/>
 												<input type="text" name="texto" value={ m.Texto } required/>
 												<input type="number" name="me_gusta" value={ meGusta }/>

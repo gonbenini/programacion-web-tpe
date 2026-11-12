@@ -397,7 +397,7 @@ func EliminarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *
 	if err := queries.DeleteUser(r.Context(), int32(id64)); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		usuarios, _ := queries.ListUsers(r.Context())
-    	views.UsuariosPage(usuarios, "Error al eliminar usuario - " + err.Error()``).Render(r.Context(), w)
+    	views.UsuariosPage(usuarios, "Error al eliminar usuario - " + err.Error()).Render(r.Context(), w)
 		return
 	}
 

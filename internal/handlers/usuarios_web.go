@@ -280,7 +280,7 @@ func UsuariosPageHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Q
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := views.UsuariosPage(usuarios).Render(r.Context(), w); err != nil {
+	if err := views.UsuariosPage(usuarios, "").Render(r.Context(), w); err != nil {
 		http.Error(w, "Error al renderizar vista: "+err.Error(), http.StatusInternalServerError)
 	}
 }

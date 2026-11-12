@@ -43,18 +43,17 @@ git checkout tp5
 make up
 ```
 
+`make up` realiza todas las tareas necesarias: genera el código, borra contenedores y volúmenes anteriores, compila, levanta la base de datos, espera a que esté lista y ejecuta la aplicación.
+
 Cuando la consola muestre `Servidor con formulario escuchando en http://localhost:8080`, abrir **http://localhost:8080** en el navegador.
 
-Para terminar:
+Para terminar, presionar **`Ctrl+C`**. Al detenerse, `make up` borra automáticamente los contenedores y volúmenes. No hace falta ejecutar ningún otro comando.
 
-1. Detener la aplicación con `Ctrl+C`.
-2. Borrar contenedores y volúmenes con:
-
-```bash
-make down
-```
+> Al cortar con `Ctrl+C`, `make` muestra `make: *** [Makefile:...: up] Error 130`. Es normal: indica que el comando se interrumpió con `Ctrl+C`, y la limpieza ya se realizó.
 
 > La primera ejecución puede tardar más porque Docker descarga las imágenes (`postgres`, `golang`, `sqlc`, `templ`) y Go descarga las dependencias.
+
+> Cada ejecución de `make up` arranca con la base de datos vacía: los datos cargados no se conservan entre ejecuciones.
 
 ---
 
@@ -74,18 +73,31 @@ Todos los comandos se ejecutan desde la carpeta raíz del proyecto (la que conti
 
 | Comando | Qué hace |
 | :--- | :--- |
-| `make up` | **Ejecuta la aplicación.** Primero corre `make generate` y después levanta la base de datos y el servidor web con `docker compose up`. |
-| `make down` | Detiene los contenedores y **borra los volúmenes** (la base vuelve a quedar vacía). |
+| `make up` | **Ejecuta la aplicación con todas sus tareas previas y posteriores** (ver detalle abajo). Al cortar con `Ctrl+C` borra contenedores y volúmenes. |
+| `make down` | Detiene los contenedores y **borra los volúmenes** (la base vuelve a quedar vacía). `make up` ya lo hace solo; sirve para limpiar a mano si algo quedó levantado. |
 | `make generate` | Genera el código Go a partir de `schema.sql`/`queries.sql` (**sqlc**) y de los archivos `.templ` (**templ**). Ambas herramientas corren en contenedores efímeros. |
 | `make test` | Genera el código, corre los tests de persistencia contra la base y al terminar borra contenedores y volúmenes. |
 | `make clean` | Borra los archivos autogenerados (código de sqlc y de templ). |
 
 ### Qué ocurre al ejecutar `make up`
 
-1. **sqlc** lee `internal/db/schema/schema.sql` y `internal/db/queries/queries.sql` y genera el paquete `internal/db/sqlc`.
-2. **templ** compila cada `views/*.templ` a un archivo `views/*_templ.go`.
-3. **docker compose** levanta el contenedor `db` (PostgreSQL). En el primer arranque ejecuta `schema.sql` para crear las tablas.
-4. Se levanta el contenedor `webserver` (imagen `golang`), que compila y ejecuta `cmd/server/main.go` con `go run`. El servidor queda escuchando en el puerto `8080`.
+**Tareas previas**
+
+1. **Generación de código:**
+   - **sqlc** lee `internal/db/schema/schema.sql` y `internal/db/queries/queries.sql` y genera el paquete `internal/db/sqlc`.
+   - **templ** compila cada `views/*.templ` a un archivo `views/*_templ.go`.
+2. **Limpieza previa:** `docker compose down -v --remove-orphans` borra contenedores y volúmenes de una ejecución anterior. Así la base siempre se crea a partir del `schema.sql` actual, que PostgreSQL solo ejecuta cuando el volumen está vacío.
+3. **Compilación:** `go build ./...` se ejecuta en un contenedor efímero de Go. Si hay un error de compilación, `make` se detiene y no levanta nada.
+4. **Levantar la base:** se levanta solo el contenedor `db` (PostgreSQL), que al arrancar con el volumen vacío ejecuta `schema.sql` para crear las tablas.
+5. **Esperar a la base:** se repite `pg_isready` cada segundo hasta que PostgreSQL acepta conexiones. Recién entonces se levanta el servidor, así nunca intenta conectarse a una base que todavía no está lista.
+
+**Ejecución**
+
+6. Se levanta el contenedor `webserver` (imagen `golang`), que ejecuta `cmd/server/main.go` con `go run`. El servidor queda escuchando en el puerto `8080` y sus logs se ven en la consola.
+
+**Tareas posteriores**
+
+7. Al presionar `Ctrl+C` (o si el servidor termina por cualquier motivo), `docker compose down -v` borra los contenedores y volúmenes.
 
 ---
 

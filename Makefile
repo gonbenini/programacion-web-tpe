@@ -11,10 +11,26 @@ generate:
 # imagen: usamos la imagen sqlc en un contenedor donde queda aislada esta libreria que usamos solo para generar el codigo. que se llame sqlc/sqlc es por el estandar de dockerhub <usuario que creo la immamgen>/<nombre de la imagen>
 # comando generate: cuando se levanta el contenedor, la tarea que se le pasa generate. este comando es interpretado por el entrypoint del contenedor.
 
-# 2. 	Genera los archivos (item 1.) y luego levanta la BD y el webserver (los contenedores que presentan las capas de la app.)
+# 2. 	Ejecuta la aplicacion con todas las tareas previas y posteriores.
 up: generate
-	docker compose up
-	# podriammos optimizar el despliegue sacando el generate de .PHONY y por lo tanto obteniendo un despliegue mas rapido. En este caso como el desarrollo es continuo y es una instancia livianta, elegimos matentenerlo para reducir la complejidad, y evitar que el codigo Go y la base de datos nunca queden desfasados.
+	@docker compose down -v --remove-orphans >/dev/null 2>&1
+	@docker compose run --rm --no-deps webserver go build -buildvcs=false ./...
+	@docker compose up -d db
+	@echo "Esperando que la base de datos este lista..."
+	@until docker compose exec -T db pg_isready -U dbuser -d foro > /dev/null 2>&1; do sleep 1; done
+	@echo "Aplicacion en http://localhost:8080 (Ctrl+C para terminar y limpiar)"
+	@trap 'docker compose down -v' EXIT; docker compose up webserver
+# Orden de las tareas:
+#  - generate (dependencia): ejecuta sqlc y templ.
+#  - down -v: borra contenedores y volumenes de una ejecucion anterior, asi siempre arranca con la base limpia.
+#  - go build ./...: compila el proyecto en un contenedor efimero. Si hay un error de compilacion, make se detiene aca. --no-deps evita que levante la base.
+#    -buildvcs=false: sin esto Go intenta leer la informacion de git del repo y falla, porque el contenedor corre como root y la carpeta montada pertenece a otro usuario.
+#  - up -d db: levanta solo la base de datos, en segundo plano.
+#  - until pg_isready: espera a que Postgres acepte conexiones ANTES de levantar el servidor. Asi el servidor nunca intenta conectarse a una base que todavia no esta lista.
+#  - up webserver: levanta el servidor en primer plano (se ven sus logs).
+#  - trap '...' EXIT: cuando el comando termina (tambien con Ctrl+C) ejecuta `docker compose down -v`, que borra contenedores y volumenes.
+#    trap y `docker compose up` tienen que ir en la misma linea porque make ejecuta cada linea en una shell distinta.
+# Al cortar con Ctrl+C make muestra "Error 130": es normal, indica que se interrumpio con Ctrl+C y la limpieza ya se hizo.
 
 # 3. 	Frena los contenedores y destruye los volúmenes (reinicia la BD)
 down:

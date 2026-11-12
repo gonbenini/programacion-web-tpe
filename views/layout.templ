@@ -1,6 +1,6 @@
 package views
 
-templ Layout(title string) {
+templ Layout(title string, err string) {
 	<!DOCTYPE html>
 	<html lang="es" data-theme="light">
 		<head>
@@ -50,8 +50,19 @@ templ Layout(title string) {
 				<hr/>
 			</header>
 			<main class="container">
+                if err != "" {
+                    <div style="background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;" role="alert">
+                        { err }
+                    </div>
+                }
 				{ children... }
 			</main>
 		</body>
 	</html>
+}
+
+templ Alerta(err string) {
+    <div class="alert alert-danger" role="alert">
+        { err }
+    </div>
 }

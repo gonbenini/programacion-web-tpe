@@ -166,4 +166,7 @@ func EliminarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *
     	views.UsuariosPage(usuarios, "Error al eliminar usuario - " + err.Error()).Render(r.Context(), w)
 		return
 	}
+	
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
 }

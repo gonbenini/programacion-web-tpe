@@ -253,4 +253,7 @@ func EliminarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *
     	views.MensajesPage(mensajes, "error al eliminar mensaje - " + err.Error()).Render(r.Context(), w)
 		return
 	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
 }

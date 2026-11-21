@@ -107,7 +107,7 @@ func CrearMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 
 func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
 	//Actualiza un usuario y redirige a GET
-	if r.Method != http.MethodPost {
+	if r.Method != http.MethodPut {
 		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
 		return
 	}
@@ -218,8 +218,7 @@ func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
     	views.MensajesPage(mensajes, err.Error()).Render(r.Context(), w)
 		return
 	}
-
-	http.Redirect(w, r, "/mensajes", http.StatusSeeOther)
+	w.WriteHeader(http.StatusOK)
 }
 
 func EliminarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {

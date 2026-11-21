@@ -54,7 +54,12 @@ templ MensajeList(mensajes []sqlc.Mensaje) {
 									<div class="acciones-cell">
 										<details>
 											<summary role="button" class="secondary outline">Editar</summary>
-											<form method="POST" action="/mensajes/editar" style="margin-top: 0.5rem; min-width: 220px;">
+											<form
+												hx-put="/mensajes/editar"
+												hx-target="closest tr"
+												hx-swap="outerHTML"
+												style="margin-top: 0.5rem; min-width: 220px;">
+												
 												<input type="hidden" name="id_mensaje" value={ m.IDMensaje }/>
 												<input type="number" name="id_usuario" value={ idUsuario } placeholder="Usuario"/>
 												<input type="number" name="id_respuesta_a_mensaje" value={ idRespuestaAmensaje } placeholder="Respuesta a"/>

@@ -31,7 +31,12 @@ templ UsuarioList(usuarios []sqlc.ListUsersRow) {
 									<div class="acciones-cell">
 										<details>
 											<summary role="button" class="secondary outline">Editar</summary>
-											<form method="POST" action="/usuarios/editar" style="margin-top: 0.5rem; min-width: 220px;">
+											<form
+												hx-put="/usuarios/editar"
+												hx-target="#tabla-usuarios"
+												hx-swap="outerHTMLHTML"
+												style="margin-top: 0.5rem; min-width: 220px;">
+
 												<input type="hidden" name="id_usuario" value={ fmt.Sprintf("%d", u.IDUsuario) }/>
 												<input type="text" name="nombre" value={ u.Nombre } placeholder="Nombre" required/>
 												<input type="email" name="mail" value={ u.Mail } placeholder="Mail" required/>

@@ -97,7 +97,12 @@ func CrearMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 		return
 	}
 
-	http.Redirect(w, r, "/mensajes", http.StatusSeeOther)
+	mensajes, err := queries.ListMensajes(r.Context())
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	views.MensajeList(mensajes).Render(r.Context(), w)
 }
 
 func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {

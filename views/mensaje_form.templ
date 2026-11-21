@@ -3,7 +3,7 @@ package views
 templ MensajeForm() {
 	<aside class="panel-box">
 		<h3>Crear Mensaje</h3>
-		<form method="POST" action="/mensajes">
+		<form hx-post="/mensajes" hx-target="#tabla-mensajes" hx-swap="outerHTML">
 			<label for="usuario">
 				Usuario
 				<input type="text" id="usuario" name="usuario" placeholder="Ej: 23" required/>

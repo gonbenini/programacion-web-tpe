@@ -7,7 +7,7 @@ import (
 )
 
 templ MensajeList(mensajes []sqlc.Mensaje) {
-	<section class="panel-box">
+	<section class="panel-box" id="tabla-mensajes">
 		<h3>Listado de Mensajes</h3>
 		if len(mensajes) == 0 {
 			<p>No hay mensajes registrados.</p>

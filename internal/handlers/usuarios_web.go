@@ -379,7 +379,7 @@ func EditarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 func EliminarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
 	// Elimina el usuario y redirige a GET
 
-	if r.Method != http.MethodPost {
+	if r.Method != http.MethodDelete {
 		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
 		return
 	}
@@ -403,6 +403,4 @@ func EliminarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *
     	views.UsuariosPage(usuarios, "Error al eliminar usuario - " + err.Error()).Render(r.Context(), w)
 		return
 	}
-
-	http.Redirect(w, r, "/usuarios", http.StatusSeeOther)
 }

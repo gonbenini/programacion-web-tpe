@@ -223,9 +223,9 @@ func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 }
 
 func EliminarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
-	// Elimina el mensaje y redirige a GET
+	// Elimina el mensaje
 
-	if r.Method != http.MethodPost {
+	if r.Method != http.MethodDelete {
 		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
 		return
 	}
@@ -248,8 +248,6 @@ func EliminarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *
     	views.MensajesPage(mensajes, "error al eliminar mensaje - " + err.Error()).Render(r.Context(), w)
 		return
 	}
-
-	http.Redirect(w, r, "/mensajes", http.StatusSeeOther)
 }
 
 func UsuariosPageHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {

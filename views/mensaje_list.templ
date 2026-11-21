@@ -63,7 +63,11 @@ templ MensajeList(mensajes []sqlc.Mensaje) {
 												<button type="submit">Guardar</button>
 											</form>
 										</details>
-										<form method="POST" action="/mensajes/eliminar" class="inline-form">
+										<form
+											hx-delete="/mensajes/eliminar"
+											hx-target="closest tr"
+											hx-swap="outerHTML"
+											hx-confirm="Esta seguro que desea eliminar?">
 											<input type="hidden" name="id_mensaje" value={ m.IDMensaje }/>
 											<button type="submit" class="contrast">Borrar</button>
 										</form>

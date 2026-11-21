@@ -218,7 +218,13 @@ func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
     	views.MensajesPage(mensajes, err.Error()).Render(r.Context(), w)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+	
+	mensajes, err := queries.ListMensajes(r.Context())
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	views.MensajeList(mensajes).Render(r.Context(), w)
 }
 
 func EliminarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
@@ -312,7 +318,7 @@ func CrearUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 
 func EditarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
 	//Actualiza un usuario y redirige a GET
-	if r.Method != http.MethodPost {
+	if r.Method != http.MethodPut {
 		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
 		return
 	}
@@ -372,7 +378,12 @@ func EditarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 		return
 	}
 
-	http.Redirect(w, r, "/usuarios", http.StatusSeeOther)
+	users, err := queries.ListUsers(r.Context())
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	views.UsuarioList(users).Render(r.Context(), w)
 }
 
 func EliminarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {

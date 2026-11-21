@@ -6,7 +6,7 @@ import (
 )
 
 templ UsuarioList(usuarios []sqlc.ListUsersRow) {
-	<section class="panel-box">
+	<section class="panel-box" id="tabla-usuarios">
 		<h3>Listado de Usuarios</h3>
 		if len(usuarios) == 0 {
 			<p>No hay usuarios registrados.</p>

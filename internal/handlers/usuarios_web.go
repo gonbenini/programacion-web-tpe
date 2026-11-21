@@ -304,8 +304,8 @@ func CrearUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
     	views.UsuariosPage(usuarios, "Error al crear usuario - " + err.Error()).Render(r.Context(), w)
 		return
 	}
-
-	http.Redirect(w, r, "/usuarios", http.StatusSeeOther)
+	users, err := queries.ListUsers(r.Context())
+	views.UsuarioList(users).Render(r.Context(), w)
 }
 
 func EditarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {

@@ -106,7 +106,7 @@ func CrearMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	views.Alerta("").Render(r.Context(), w)
-	views.UsuarioList(mensajes).Render(r.Context(), w)
+	views.MensajeList(mensajes).Render(r.Context(), w)
 }
 
 func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
@@ -123,7 +123,7 @@ func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 
 	id64, err := strconv.ParseInt(r.FormValue("id_mensaje"), 10, 32)
 	if err != nil {
-		http.Error(w, http.StatusInternalServerError)
+		http.Error(w, "Error al parsear el ID del mensaje", http.StatusInternalServerError)
 		return
 	}
 

@@ -141,7 +141,7 @@ func EditarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 	views.Alerta("").Render(r.Context(), w)
 	users, err := queries.ListUsers(r.Context())
 	if err != nil {
-		http.Error(w, http.StatusInternalServerError)
+		http.Error(w, "Error al obtener la lista de usuarios", http.StatusInternalServerError)
 		return
 	}
 	views.UsuarioList(users).Render(r.Context(), w)

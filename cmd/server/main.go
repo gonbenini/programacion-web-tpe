@@ -45,6 +45,17 @@ func main() {
 		}
 	})
 
+	http.HandleFunc("/usuarios/", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodDelete:
+			handlers.EliminarUsuarioWebHandler(w, r, queries)
+		case http.MethodPut:
+			handlers.EditarUsuarioWebHandler(w, r, queries)
+		default:
+			http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
+		}
+	})
+
 	http.HandleFunc("/mensajes", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
@@ -56,20 +67,15 @@ func main() {
 		}
 	})
 
-	http.HandleFunc("/usuarios/editar", func(w http.ResponseWriter, r *http.Request) {
-		handlers.EditarUsuarioWebHandler(w, r, queries)
-	})
-
-	http.HandleFunc("/mensajes/editar", func(w http.ResponseWriter, r *http.Request) {
-		handlers.EditarMensajeWebHandler(w, r, queries)
-	})
-
-	http.HandleFunc("/usuarios/", func(w http.ResponseWriter, r *http.Request) {
-		handlers.EliminarUsuarioWebHandler(w, r, queries)
-	})
-
 	http.HandleFunc("/mensajes/", func(w http.ResponseWriter, r *http.Request) {
-		handlers.EliminarMensajeWebHandler(w, r, queries)
+		switch r.Method {
+		case http.MethodDelete:
+			handlers.EliminarMensajeWebHandler(w, r, queries)
+		case http.MethodPost:
+			handlers.EditarMensajeWebHandler(w, r, queries)
+		default:
+			http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
+		}
 	})
 
 	fmt.Printf("Servidor con formulario escuchando en http://localhost%s\n", port)

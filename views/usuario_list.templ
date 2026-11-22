@@ -32,7 +32,7 @@ templ UsuarioList(usuarios []sqlc.ListUsersRow) {
 										<details>
 											<summary role="button" class="secondary outline">Editar</summary>
 											<form
-												hx-put="/usuarios/editar"
+												hx-put={ fmt.Sprintf("/usuarios/%d", u.IDUsuario) }
 												hx-target="#tabla-usuarios"
 												hx-swap="outerHTMLHTML"
 												style="margin-top: 0.5rem; min-width: 220px;">

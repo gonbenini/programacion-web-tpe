@@ -56,7 +56,7 @@ templ MensajeList(mensajes []sqlc.Mensaje) {
 										<details>
 											<summary role="button" class="secondary outline">Editar</summary>
 											<form
-												hx-put="/mensajes/editar"
+												hx-put={ fmt.Sprintf("/mensajes/%d", m.IDMensaje) }
 												hx-target="#tabla-mensajes"
 												hx-swap="outerHTML"
 												style="margin-top: 0.5rem; min-width: 220px;">

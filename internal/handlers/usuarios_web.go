@@ -136,9 +136,12 @@ func EditarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 		return
 	}
 
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	views.Alerta("").Render(r.Context(), w)
 	users, err := queries.ListUsers(r.Context())
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, http.StatusInternalServerError)
 		return
 	}
 	views.UsuarioList(users).Render(r.Context(), w)
@@ -172,4 +175,5 @@ func EliminarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *
 	
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
+	views.Alerta("").Render(r.Context(), w)
 }

@@ -45,10 +45,10 @@ func CrearMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 	//parseamos sin preguntar si es vacio ya que es requerido en el formulario
 	usuario, err := strconv.ParseInt(r.FormValue("usuario"), 10, 32)
 	if err != nil {
-			w.Header().Set("HX-Reswap", "none")
-			w.WriteHeader(http.StatusOK)
-			views.Alerta("ID de usuario invalido").Render(r.Context(), w)
-			return
+		w.Header().Set("HX-Reswap", "none")
+		w.WriteHeader(http.StatusOK)
+		views.Alerta("ID de usuario invalido").Render(r.Context(), w)
+		return
 	}
 
 	//parsear el campo respuesta, que es opcional
@@ -56,9 +56,9 @@ func CrearMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 	if r.FormValue("respuesta") != "" {
 		valor, err := strconv.ParseInt(r.FormValue("respuesta"), 10, 32)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			mensajes, _ := queries.ListMensajes(r.Context())
-			views.MensajesPage(mensajes).Render(r.Context(), w)
+			w.Header().Set("HX-Reswap", "none")
+			w.WriteHeader(http.StatusOK)
+			views.Alerta("ID de respuesta invalido").Render(r.Context(), w)
 			return
 		}
 		respuestaInt := int32(valor)
@@ -103,7 +103,10 @@ func CrearMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	views.MensajeList(mensajes).Render(r.Context(), w)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	views.Alerta("").Render(r.Context(), w)
+	views.UsuarioList(mensajes).Render(r.Context(), w)
 }
 
 func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
@@ -120,9 +123,7 @@ func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 
 	id64, err := strconv.ParseInt(r.FormValue("id_mensaje"), 10, 32)
 	if err != nil {
-		w.Header().Set("HX-Reswap", "none")
-		w.WriteHeader(http.StatusOK)
-		views.Alerta("ID de mensaje invalido").Render(r.Context(), w)
+		http.Error(w, http.StatusInternalServerError)
 		return
 	}
 
@@ -225,6 +226,9 @@ func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	views.Alerta("").Render(r.Context(), w)
 	views.MensajeList(mensajes).Render(r.Context(), w)
 }
 
@@ -256,4 +260,5 @@ func EliminarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
+	views.Alerta("").Render(r.Context(), w)
 }

@@ -71,7 +71,7 @@ func main() {
 		switch r.Method {
 		case http.MethodDelete:
 			handlers.EliminarMensajeWebHandler(w, r, queries)
-		case http.MethodPost:
+		case http.MethodPut:
 			handlers.EditarMensajeWebHandler(w, r, queries)
 		default:
 			http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)

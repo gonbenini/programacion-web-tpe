@@ -2,8 +2,8 @@ package views
 
 import sqlc "foro/internal/db/sqlc"
 
-templ UsuariosPage(usuarios []sqlc.ListUsersRow, err string) {
-	@Layout("Gestión de Usuarios", err) {
+templ UsuariosPage(usuarios []sqlc.ListUsersRow) {
+	@Layout("Gestión de Usuarios") {
 		<h1>Usuarios</h1>
 		<div class="main-grid">
 			@UsuarioList(usuarios)

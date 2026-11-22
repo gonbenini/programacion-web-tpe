@@ -5,16 +5,16 @@ templ MensajeForm() {
 		<h3>Crear Mensaje</h3>
 		<form hx-post="/mensajes" hx-target="#tabla-mensajes" hx-swap="outerHTML">
 			<label for="usuario">
-				Usuario
+				ID usuario
 				<input type="text" id="usuario" name="usuario" placeholder="Ej: 23" required/>
 			</label>
 			<label for="respuesta_a">
-				Respuesta a mensaje
-				<input type="text" id="respuesta" name="respuesta" placeholder="11"/>
+				ID mensaje respuesta
+				<input type="text" id="respuesta" name="respuesta" placeholder="Ej: 11"/>
 			</label>
 			<label for="texto">
 				Texto
-				<input type="text" id="texto" name="texto" placeholder="Me gusta templ..." required/>
+				<input type="text" id="texto" name="texto" placeholder="Ej: Me gusta templ..." required/>
 			</label>
 			<button type="submit">Crear</button>
 		</form>

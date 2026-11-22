@@ -1,6 +1,6 @@
 package views
 
-templ Layout(title string, err string) {
+templ Layout(title string) {
 	<!DOCTYPE html>
 	<html lang="es" data-theme="light">
 		<head>
@@ -34,6 +34,18 @@ templ Layout(title string, err string) {
 						grid-template-columns: 1fr;
 					}
 				}
+				#alerta {
+					background-color: #f8d7da;
+					color: #842029;
+					border: 1px solid #f5c2c7;
+					border-radius: 8px;
+					padding: 1rem;
+					margin-bottom: 1rem;
+				}
+
+				#alerta:empty {
+					display: none;
+				}
 			</style>
 			<script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.11/dist/htmx.min.js" 
           		integrity="sha384-2OatzQy1H+Zd/IIrjr1TcuDGqLXeHhbooAyJY1KdQMKnr4LZ22k31GBLdYKHmVjg"
@@ -53,11 +65,7 @@ templ Layout(title string, err string) {
 				<hr/>
 			</header>
 			<main class="container">
-                if err != "" {
-                    <div style="background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;" role="alert">
-                        { err }
-                    </div>
-                }
+				<div id="alerta"></div>
 				{ children... }
 			</main>
 		</body>
@@ -65,7 +73,11 @@ templ Layout(title string, err string) {
 }
 
 templ Alerta(err string) {
-    <div class="alert alert-danger" role="alert">
-        { err }
+    <div id="alerta" hx-swap-oob="true">
+        if err != "" {
+            <div class="alert-danger" role="alert">
+                { err }
+            </div>
+        }
     </div>
 }

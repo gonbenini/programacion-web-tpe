@@ -34,7 +34,7 @@ templ UsuarioList(usuarios []sqlc.ListUsersRow) {
 											<form
 												hx-put={ fmt.Sprintf("/usuarios/%d", u.IDUsuario) }
 												hx-target="#tabla-usuarios"
-												hx-swap="outerHTMLHTML"
+												hx-swap="outerHTML"
 												style="margin-top: 0.5rem; min-width: 220px;">
 
 												<input type="hidden" name="id_usuario" value={ fmt.Sprintf("%d", u.IDUsuario) }/>
@@ -47,6 +47,7 @@ templ UsuarioList(usuarios []sqlc.ListUsersRow) {
 										<button type="submit" class="contrast"
 											hx-delete={ fmt.Sprintf("/usuarios/%d", u.IDUsuario) }
 											hx-target="closest tr"
+											hx-swap="outerHTML"
 											hx-confirm="Esta seguro que quiere eliminar?">
 
 											Borrar

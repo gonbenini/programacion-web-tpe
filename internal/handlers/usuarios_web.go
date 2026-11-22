@@ -24,7 +24,7 @@ func UsuariosPageHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Q
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := views.UsuariosPage(usuarios, "").Render(r.Context(), w); err != nil {
+	if err := views.UsuariosPage(usuarios).Render(r.Context(), w); err != nil {
 		http.Error(w, "Error al renderizar vista: "+err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -49,9 +49,9 @@ func CrearUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 	}
 
 	if err := logic.ValidarUsuario(nuevo); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		usuarios, _ := queries.ListUsers(r.Context())
-    	views.UsuariosPage(usuarios, "Usuario inválido - " + err.Error()).Render(r.Context(), w)
+		w.Header().Set("HX-Reswap", "none")
+		w.WriteHeader(http.StatusOK)
+		views.Alerta("Error al crear usuario").Render(r.Context(), w)
 		return
 	}
 
@@ -61,11 +61,15 @@ func CrearUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 		Contrasenia: nuevo.Contrasenia,
 	})
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		usuarios, _ := queries.ListUsers(r.Context())
-    	views.UsuariosPage(usuarios, "Error al crear usuario - " + err.Error()).Render(r.Context(), w)
+		w.Header().Set("HX-Reswap", "none")
+		w.WriteHeader(http.StatusOK)
+		views.Alerta("Error al crear usuario: Correo electronico duplicado").Render(r.Context(), w)
 		return
 	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	views.Alerta("").Render(r.Context(), w)
 	users, err := queries.ListUsers(r.Context())
 	views.UsuarioList(users).Render(r.Context(), w)
 }
@@ -84,9 +88,9 @@ func EditarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 
 	id64, err := strconv.ParseInt(r.FormValue("id_usuario"), 10, 32)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		usuarios, _ := queries.ListUsers(r.Context())
-    	views.UsuariosPage(usuarios, "ID de usuario inválido - " + err.Error()).Render(r.Context(), w)
+		w.Header().Set("HX-Reswap", "none")
+		w.WriteHeader(http.StatusOK)
+		views.Alerta("Error al crear usuario: ID no valido").Render(r.Context(), w)
 		return
 	}
 
@@ -103,9 +107,9 @@ func EditarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 	}
 
 	if err := logic.ValidarUpdateUsuario(reqUpdate); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		usuarios, _ := queries.ListUsers(r.Context())
-    	views.UsuariosPage(usuarios, "Usuario inválido - " + err.Error()).Render(r.Context(), w)
+		w.Header().Set("HX-Reswap", "none")
+		w.WriteHeader(http.StatusOK)
+		views.Alerta("Error al actualizar usuario").Render(r.Context(), w)
 		return
 	}
 
@@ -126,9 +130,9 @@ func EditarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 	}
 
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		usuarios, _ := queries.ListUsers(r.Context())
-    	views.UsuariosPage(usuarios, "Error al actualizar usuario - " + err.Error()).Render(r.Context(), w)
+		w.Header().Set("HX-Reswap", "none")
+		w.WriteHeader(http.StatusOK)
+		views.Alerta("Error al actualizar usuario").Render(r.Context(), w)
 		return
 	}
 
@@ -160,9 +164,9 @@ func EliminarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *
 	}
 
 	if err := queries.DeleteUser(r.Context(), int32(id64)); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		usuarios, _ := queries.ListUsers(r.Context())
-    	views.UsuariosPage(usuarios, "Error al eliminar usuario - " + err.Error()).Render(r.Context(), w)
+		w.Header().Set("HX-Reswap", "none")
+		w.WriteHeader(http.StatusOK)
+		views.Alerta("Error al eliminar usuario").Render(r.Context(), w)
 		return
 	}
 	

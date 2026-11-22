@@ -25,7 +25,7 @@ func MensajesPageHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Q
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := views.MensajesPage(mensajes, "").Render(r.Context(), w); err != nil {
+	if err := views.MensajesPage(mensajes).Render(r.Context(), w); err != nil {
 		http.Error(w, "Error al renderizar vista: "+err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -45,10 +45,10 @@ func CrearMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 	//parseamos sin preguntar si es vacio ya que es requerido en el formulario
 	usuario, err := strconv.ParseInt(r.FormValue("usuario"), 10, 32)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		mensajes, _ := queries.ListMensajes(r.Context())
-    	views.MensajesPage(mensajes, "Usuario invalido - " + err.Error()).Render(r.Context(), w)
-		return
+			w.Header().Set("HX-Reswap", "none")
+			w.WriteHeader(http.StatusOK)
+			views.Alerta("ID de usuario invalido").Render(r.Context(), w)
+			return
 	}
 
 	//parsear el campo respuesta, que es opcional
@@ -58,7 +58,7 @@ func CrearMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			mensajes, _ := queries.ListMensajes(r.Context())
-			views.MensajesPage(mensajes, "Respuesta a mensaje inválida - " + err.Error()).Render(r.Context(), w)
+			views.MensajesPage(mensajes).Render(r.Context(), w)
 			return
 		}
 		respuestaInt := int32(valor)
@@ -80,9 +80,9 @@ func CrearMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 	}
 
 	if err := logic.ValidarMensaje(req); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		mensajes, _ := queries.ListMensajes(r.Context())
-    	views.MensajesPage(mensajes, err.Error()).Render(r.Context(), w)
+		w.Header().Set("HX-Reswap", "none")
+		w.WriteHeader(http.StatusOK)
+		views.Alerta("Error al crear mensaje").Render(r.Context(), w)
 		return
 	}
 
@@ -92,9 +92,9 @@ func CrearMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 		Texto: req.Texto,
 	})
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		mensajes, _ := queries.ListMensajes(r.Context())
-    	views.MensajesPage(mensajes, "Error al crear mensaje: " + err.Error()).Render(r.Context(), w)
+		w.Header().Set("HX-Reswap", "none")
+		w.WriteHeader(http.StatusOK)
+		views.Alerta("Error al crear mensaje").Render(r.Context(), w)
 		return
 	}
 
@@ -120,9 +120,9 @@ func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 
 	id64, err := strconv.ParseInt(r.FormValue("id_mensaje"), 10, 32)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		mensajes, _ := queries.ListMensajes(r.Context())
-    	views.MensajesPage(mensajes, "ID de mensaje invalido - " + err.Error()).Render(r.Context(), w)
+		w.Header().Set("HX-Reswap", "none")
+		w.WriteHeader(http.StatusOK)
+		views.Alerta("ID de mensaje invalido").Render(r.Context(), w)
 		return
 	}
 
@@ -130,9 +130,9 @@ func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 	if r.FormValue("id_usuario") != "" {
 		valor, err := strconv.ParseInt(r.FormValue("id_usuario"), 10, 32)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			mensajes, _ := queries.ListMensajes(r.Context())
-			views.MensajesPage(mensajes, "ID de usuario invalido - " + err.Error()).Render(r.Context(), w)
+			w.Header().Set("HX-Reswap", "none")
+			w.WriteHeader(http.StatusOK)
+			views.Alerta("ID de usuario invalido").Render(r.Context(), w)
 			return
 		}
 		usuarioInt := int32(valor)
@@ -151,10 +151,10 @@ func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 	if r.FormValue("id_respuesta_a_mensaje") != "" {
 		valor, err := strconv.ParseInt(r.FormValue("id_respuesta_a_mensaje"), 10, 32)
 		if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		mensajes, _ := queries.ListMensajes(r.Context())
-    	views.MensajesPage(mensajes, "ID de respuesta invalido - " + err.Error()).Render(r.Context(), w)
-		return
+			w.Header().Set("HX-Reswap", "none")
+			w.WriteHeader(http.StatusOK)
+			views.Alerta("ID de respuesta a mensaje invalido").Render(r.Context(), w)
+			return
 		}
 		respuestaInt := int32(valor)
 		respuesta = &respuestaInt
@@ -172,10 +172,10 @@ func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 	if r.FormValue("me_gusta") != "" {
 		valor, err := strconv.ParseInt(r.FormValue("me_gusta"), 10, 32)
 		if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		mensajes, _ := queries.ListMensajes(r.Context())
-    	views.MensajesPage(mensajes, "ID de me gusta invalido - " + err.Error()).Render(r.Context(), w)
-		return
+			w.Header().Set("HX-Reswap", "none")
+			w.WriteHeader(http.StatusOK)
+			views.Alerta("Cantidad de me gusta invalido").Render(r.Context(), w)
+			return
 		}
 		meGustaInt := int32(valor)
 		meGusta = &meGustaInt
@@ -199,9 +199,9 @@ func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 	}
 
 	if err := logic.ValidarEdicionMensaje(reqUpdate); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		mensajes, _ := queries.ListMensajes(r.Context())
-    	views.MensajesPage(mensajes, err.Error()).Render(r.Context(), w)
+		w.Header().Set("HX-Reswap", "none")
+		w.WriteHeader(http.StatusOK)
+		views.Alerta("Error al actualizar mensaje").Render(r.Context(), w)
 		return
 	}
 
@@ -214,9 +214,9 @@ func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 	})
 
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		mensajes, _ := queries.ListMensajes(r.Context())
-    	views.MensajesPage(mensajes, err.Error()).Render(r.Context(), w)
+		w.Header().Set("HX-Reswap", "none")
+		w.WriteHeader(http.StatusOK)
+		views.Alerta("Error al actualizar mensaje").Render(r.Context(), w)
 		return
 	}
 	
@@ -248,9 +248,9 @@ func EliminarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *
 	}
 
 	if err := queries.DeleteMensaje(r.Context(), int32(id64)); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		mensajes, _ := queries.ListMensajes(r.Context())
-    	views.MensajesPage(mensajes, "error al eliminar mensaje - " + err.Error()).Render(r.Context(), w)
+		w.Header().Set("HX-Reswap", "none")
+		w.WriteHeader(http.StatusOK)
+		views.Alerta("Error al eliminar mensaje").Render(r.Context(), w)
 		return
 	}
 

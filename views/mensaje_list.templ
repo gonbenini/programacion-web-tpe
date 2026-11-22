@@ -2,6 +2,7 @@
 package views
 
 import (
+	"fmt"
 	"strconv"
 	sqlc "foro/internal/db/sqlc"
 )
@@ -68,14 +69,13 @@ templ MensajeList(mensajes []sqlc.Mensaje) {
 												<button type="submit">Guardar</button>
 											</form>
 										</details>
-										<form
-											hx-delete="/mensajes/eliminar"
+										<button type="submit"
+											hx-delete={ fmt.Sprintf("/mensajes/%d", m.IDMensaje) }
 											hx-target="closest tr"
-											hx-swap="outerHTML"
-											hx-confirm="Esta seguro que desea eliminar?">
-											<input type="hidden" name="id_mensaje" value={ m.IDMensaje }/>
-											<button type="submit" class="contrast">Borrar</button>
-										</form>
+											hx-confirm="Esta seguro que quiere eliminar?">
+											
+											Borrar
+										</button>
 									</div>
 								</td>
 							</tr>

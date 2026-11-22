@@ -6,6 +6,7 @@ import (
 	sqlc "foro/internal/db/sqlc"
 	"foro/internal/logic"
 	"foro/views"
+	"strings"
 )
 
 func UsuariosPageHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
@@ -147,16 +148,14 @@ func EliminarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *
 		return
 	}
 
-	if err := r.ParseForm(); err != nil {
-		http.Error(w, "Error al procesar el formulario", http.StatusBadRequest)
+	parts := strings.Split(r.URL.Path, "/")
+	if len(parts) < 3 {
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
-	id64, err := strconv.ParseInt(r.FormValue("id_usuario"), 10, 32)
+	id64 ,err := strconv.Atoi(parts[2])
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		usuarios, _ := queries.ListUsers(r.Context())
-    	views.UsuariosPage(usuarios, "ID de usuario inválido - " + err.Error()).Render(r.Context(), w)
 		return
 	}
 

@@ -7,6 +7,7 @@ import (
 	"foro/internal/logic"
 	"foro/views"
 	"database/sql"
+	"strings"
 )
 
 func MensajesPageHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
@@ -235,18 +236,17 @@ func EliminarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *
 		return
 	}
 
-	if err := r.ParseForm(); err != nil {
-		http.Error(w, "Error al procesar el formulario", http.StatusBadRequest)
+	parts := strings.Split(r.URL.Path, "/")
+	if len(parts) < 3 {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	id64 ,err := strconv.Atoi(parts[2])
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	id64, err := strconv.ParseInt(r.FormValue("id_mensaje"), 10, 32)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		mensajes, _ := queries.ListMensajes(r.Context())
-    	views.MensajesPage(mensajes, "ID de mensaje invalido - " + err.Error()).Render(r.Context(), w)
-		return
-	}
 	if err := queries.DeleteMensaje(r.Context(), int32(id64)); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		mensajes, _ := queries.ListMensajes(r.Context())

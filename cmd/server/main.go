@@ -64,11 +64,11 @@ func main() {
 		handlers.EditarMensajeWebHandler(w, r, queries)
 	})
 
-	http.HandleFunc("/usuarios/eliminar", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/usuarios/", func(w http.ResponseWriter, r *http.Request) {
 		handlers.EliminarUsuarioWebHandler(w, r, queries)
 	})
 
-	http.HandleFunc("/mensajes/eliminar", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/mensajes/", func(w http.ResponseWriter, r *http.Request) {
 		handlers.EliminarMensajeWebHandler(w, r, queries)
 	})
 

@@ -21,13 +21,24 @@ templ Layout(title string) {
 					padding: 1.5rem;
 					background: #ffffff;
 				}
-				.acciones-cell {
+				.acciones-cell details > summary {
 					display: flex;
-					gap: 0.5rem;
 					align-items: center;
+					justify-content: space-between;
+					white-space: nowrap;
+				}
+
+				.acciones-cell details > summary::after {
+					float: none;
+					margin-inline-start: 0.5rem;
 				}
 				.inline-form {
 					margin: 0;
+				}
+				table th,
+				table td {
+					text-align: center;
+					vertical-align: middle;
 				}
 				@media (max-width: 900px) {
 					.main-grid {

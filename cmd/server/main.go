@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"foro/internal/db"
 	"foro/internal/handlers"
@@ -22,6 +23,7 @@ func main() {
 	db_conecction, err := db.AbrirDB()
 	if err != nil {
 		fmt.Printf("Error al abrir la base de datos: %s\n", err)
+		os.Exit(1)
 	}
 	//cerramos una vez terminada la ejecución del main
 	defer db_conecction.Close()
@@ -31,6 +33,11 @@ func main() {
 	port := ":8080"
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		// "/" atrapa cualquier ruta no registrada: solo la raíz muestra la página de usuarios
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
 		handlers.UsuariosPageHandler(w, r, queries)
 	})
 

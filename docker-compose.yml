@@ -1,10 +1,7 @@
 services:
   db:
     image: postgres:latest
-    environment:
-      POSTGRES_DB: foro
-      POSTGRES_USER: dbuser
-      POSTGRES_PASSWORD: dbpw
+    env_file: .env # POSTGRES_USER, POSTGRES_PASSWORD y POSTGRES_DB (ver .env.example)
     restart: unless-stopped
     volumes:
       - ./internal/db/schema/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql
@@ -18,6 +15,7 @@ services:
     ports:
       - "8080:8080"
     command: go run ./cmd/server/main.go
+    env_file: .env # el servidor arma la conexion a la base con estas mismas variables
     depends_on:
       - db
 

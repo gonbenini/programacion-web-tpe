@@ -1,6 +1,13 @@
 .PHONY: generate up down clean test # Dado que estos son los comandos que queremos automatizar nosotros para operar la app, esta linea se agrega para que no interprete que estos comandos viviran en carpetas. Sino que estaran defindos ahi. En caso que no este este comando y existiera una carpeta clean, al llaar a make, se iria a buscar ahi a esa carpeta, que si tiene otra cosa daria error.
 # poner @ antes del comando evita que se imprima el comando
 
+# 0.	Crea el archivo .env (credenciales de la base) a partir de .env.example si todavia no existe.
+#	Las credenciales no estan escritas en docker-compose.yml ni en el codigo: se leen de .env, que no se versiona.
+#	No es .PHONY: make lo considera un archivo, asi que solo lo crea si falta y nunca pisa un .env editado a mano.
+.env:
+	@cp .env.example .env
+	@echo "Se creo .env a partir de .env.example"
+
 # 1.	Genera el código de Go leyendo el schema y queries antes de que Docker Compose se levante, los contenedores dependen de estos assets.
 generate:
 	@docker run --rm -v "$(shell pwd):/src" -w /src sqlc/sqlc generate >/dev/null
@@ -12,12 +19,12 @@ generate:
 # comando generate: cuando se levanta el contenedor, la tarea que se le pasa generate. este comando es interpretado por el entrypoint del contenedor.
 
 # 2. 	Ejecuta la aplicacion con todas las tareas previas y posteriores.
-up: generate
+up: .env generate
 	@docker compose down -v --remove-orphans >/dev/null 2>&1
 	@docker compose run --rm --no-deps webserver go build -buildvcs=false ./...
 	@docker compose up -d db
 	@echo "Esperando que la base de datos este lista..."
-	@until docker compose exec -T db pg_isready -U dbuser -d foro > /dev/null 2>&1; do sleep 1; done
+	@until docker compose exec -T db sh -c 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"' > /dev/null 2>&1; do sleep 1; done
 	@echo "Aplicacion en http://localhost:8080 (Ctrl+C para terminar y limpiar)"
 	@trap 'docker compose down -v' EXIT; docker compose up webserver
 # Orden de las tareas:
@@ -26,14 +33,14 @@ up: generate
 #  - go build ./...: compila el proyecto en un contenedor efimero. Si hay un error de compilacion, make se detiene aca. --no-deps evita que levante la base.
 #    -buildvcs=false: sin esto Go intenta leer la informacion de git del repo y falla, porque el contenedor corre como root y la carpeta montada pertenece a otro usuario.
 #  - up -d db: levanta solo la base de datos, en segundo plano.
-#  - until pg_isready: espera a que Postgres acepte conexiones ANTES de levantar el servidor. Asi el servidor nunca intenta conectarse a una base que todavia no esta lista.
+#  - until pg_isready: el usuario y la base se leen de las variables del contenedor db (cargadas desde .env); `$$` le pasa un `$` literal a la shell. Espera a que Postgres acepte conexiones ANTES de levantar el servidor. Asi el servidor nunca intenta conectarse a una base que todavia no esta lista.
 #  - up webserver: levanta el servidor en primer plano (se ven sus logs).
 #  - trap '...' EXIT: cuando el comando termina (tambien con Ctrl+C) ejecuta `docker compose down -v`, que borra contenedores y volumenes.
 #    trap y `docker compose up` tienen que ir en la misma linea porque make ejecuta cada linea en una shell distinta.
 # Al cortar con Ctrl+C make muestra "Error 130": es normal, indica que se interrumpio con Ctrl+C y la limpieza ya se hizo.
 
 # 3. 	Frena los contenedores y destruye los volúmenes (reinicia la BD)
-down:
+down: .env
 	@docker compose down -v
 # si la intencion es solo detener la instancia podriamos hacer `docker compose stop` o docker compose down` sin eliminar los volumenes que contiene la informacion generada
 
@@ -41,16 +48,17 @@ down:
 # Comando git clean -ndx: -n no borra, solo lista; -d muestra directorios; x muestra tambien lo escondido por el .gitignore
 #					-fdx: en cambio poner -f en vez de -n, confirma el borrado. git por defecto pide confirmacion para esto, sino se niega.
 # Borro los archivos desde adentro de un contenedor para no tener que hacer sudo
-clean:
+# -e .env: excluye el .env del borrado (con -x, git clean igual respeta los patrones pasados con -e), asi no se pierden credenciales editadas a mano
+clean: .env
 	@echo "Se van a borrar los siguientes archivos:"
-	@git clean -ndx | awk '{print $3}'
+	@git clean -ndx -e .env | awk '{print $3}'
 	@docker compose run --rm webserver rm -rf internal/db/sqlc >/dev/null 2>&1
-	@-git clean -fdx >/dev/null 2>&1
+	@-git clean -fdx -e .env >/dev/null 2>&1
 # Dato importante, el make se ejecuta en sh, no en bash. Por lo tanto no existe `&>/dev/null` para redirigir error y salida estandar al mismo archivo
 # Si hacemos `&>/dev/null` manda el proceso a segundo plano y sigue con el siguiente. En cambio hay que usar `>/dev/null 2>&1` esta se llama "direccioon estandar POSIX"
 
 # 5.    Ejecuta los tests.
-test: generate
+test: .env generate
 	docker compose run --rm webserver go test -v ./internal/db/tests
 	@docker compose stop >/dev/null 2>&1
 	@$(MAKE) down >/dev/null 2>&1

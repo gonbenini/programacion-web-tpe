@@ -20,6 +20,7 @@ El objetivo es desarrollar una aplicación web a partir de un dominio simple, ap
 
 - [Ejecución rápida](#-ejecución-rápida)
 - [Requisitos](#requisitos)
+  - [Configuración (credenciales de la base)](#configuración-credenciales-de-la-base)
 - [Comandos disponibles](#comandos-disponibles)
 - [Uso de la aplicación](#uso-de-la-aplicación)
   - [Pantalla general](#pantalla-general)
@@ -73,6 +74,23 @@ Para terminar, presionar **`Ctrl+C`**. Al detenerse, `make up` borra automática
 
 No hace falta instalar Go, sqlc ni templ en la máquina: todo se ejecuta dentro de contenedores.
 
+### Configuración (credenciales de la base)
+
+Las credenciales de PostgreSQL **no están escritas** en `docker-compose.yml` ni en el código: se leen de un archivo `.env`, que **no se versiona** (está en `.gitignore`).
+
+- En el repositorio está `.env.example`, con las variables necesarias y valores de ejemplo para desarrollo.
+- La primera vez que se ejecuta `make` (`up`, `test`, `down` o `clean`), si no existe `.env`, se crea copiando `.env.example`. No hace falta ningún paso manual.
+- Para usar otras credenciales, editar `.env`. `make` nunca pisa un `.env` existente.
+
+| Variable | Uso | Valor de ejemplo |
+| :--- | :--- | :--- |
+| `POSTGRES_USER` | Usuario de la base. Lo usan el contenedor `db` (lo crea al iniciar) y el servidor (para conectarse). | `dbuser` |
+| `POSTGRES_PASSWORD` | Contraseña de ese usuario. | `dbpw` |
+| `POSTGRES_DB` | Nombre de la base. | `foro` |
+| `DB_HOST` | Host de la base para el servidor: el nombre del servicio en `docker-compose.yml`. | `db` |
+
+`docker-compose.yml` carga `.env` en los dos contenedores con `env_file`.
+
 ---
 
 ## Comandos disponibles
@@ -91,6 +109,7 @@ Todos los comandos se ejecutan desde la carpeta raíz del proyecto (la que conti
 
 **Tareas previas**
 
+0. **Configuración:** si no existe `.env`, se crea a partir de `.env.example` (ver [Configuración](#configuración-credenciales-de-la-base)).
 1. **Generación de código:**
    - **sqlc** lee `internal/db/schema/schema.sql` y `internal/db/queries/queries.sql` y genera el paquete `internal/db/sqlc`.
    - **templ** compila cada `views/*.templ` a un archivo `views/*_templ.go`.
@@ -368,6 +387,7 @@ Se responde `200` y no `4xx` en los errores esperados porque HTMX, por defecto, 
 │   ├── mensajes_page.templ
 │   ├── mensaje_list.templ
 │   └── mensaje_form.templ
+├── .env.example                  # Variables de la base (se copia a .env, que no se versiona)
 ├── docker-compose.yml
 ├── go.mod
 ├── go.sum
@@ -480,7 +500,7 @@ UsuariosPage                         MensajesPage
 
 `AbrirDB()` (en `internal/db/db_controller.go`) abre la conexión con PostgreSQL:
 
-- Cadena de conexión: `postgres://dbuser:dbpw@db:5432/foro?sslmode=disable` (`db` es el nombre del servicio en `docker-compose.yml`).
+- Arma la cadena de conexión (`postgres://<usuario>:<contraseña>@<host>:5432/<base>?sslmode=disable`) con las variables de entorno `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` y `DB_HOST` (ver [Configuración](#configuración-credenciales-de-la-base)). Si falta alguna, devuelve un error que indica revisar `.env`.
 - Verifica la disponibilidad con `db.Ping()`.
 - Limita el pool a 25 conexiones con `db.SetMaxOpenConns(25)`.
 

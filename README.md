@@ -12,7 +12,7 @@ Este repositorio corresponde al Trabajo Práctico Especial de la cursada de Prog
 
 El objetivo es desarrollar una aplicación web a partir de un dominio simple, aplicando los conceptos y tecnologías vistos durante la cursada.
 
-**Entrega actual: TP5** (rama `tp5`). La aplicación es un foro con interfaz web renderizada del lado del servidor (SSR) con [templ](https://templ.guide), sobre Go, PostgreSQL y sqlc.
+**Entrega actual: TP6** (rama `tp6`). La aplicación es un foro con interfaz web renderizada del lado del servidor (SSR) con [templ](https://templ.guide), sobre Go, PostgreSQL y sqlc. En esta entrega se incorpora [HTMX](https://htmx.org): crear, editar y borrar ya **no recargan la página**; el servidor devuelve solo el fragmento de HTML que cambió y HTMX lo reemplaza en el lugar correspondiente.
 
 ---
 
@@ -31,6 +31,7 @@ El objetivo es desarrollar una aplicación web a partir de un dominio simple, ap
   - [Dominio elegido](#dominio-elegido)
   - [Modelo de datos](#modelo-de-datos)
 - [Arquitectura](#arquitectura)
+- [Interfaz dinámica con HTMX (TP6)](#interfaz-dinámica-con-htmx-tp6)
 - [Estructura de proyecto](#estructura-de-proyecto)
 - [Rutas de la aplicación](#rutas-de-la-aplicación)
 - [Vistas (templates templ)](#vistas-templates-templ)
@@ -45,7 +46,7 @@ El objetivo es desarrollar una aplicación web a partir de un dominio simple, ap
 ```bash
 git clone <url-del-repositorio>
 cd <carpeta-del-repositorio>
-git checkout tp5
+git checkout tp6
 make up
 ```
 
@@ -67,7 +68,8 @@ Para terminar, presionar **`Ctrl+C`**. Al detenerse, `make up` borra automática
 
 - **Docker** con el plugin **docker compose** (comando `docker compose`).
 - **make**.
-- Puertos **8080** (aplicación) y **5432** (base de datos) libres.
+- Puerto **8080** libre (la base de datos no se expone fuera de Docker).
+- Conexión a internet en el navegador: HTMX y Pico CSS se cargan desde un CDN (el proyecto no incluye archivos `.js`).
 
 No hace falta instalar Go, sqlc ni templ en la máquina: todo se ejecuta dentro de contenedores.
 
@@ -128,7 +130,7 @@ Con la aplicación levantada (`make up`), abrir **http://localhost:8080** en el 
 
 - La **barra de navegación** permite pasar de una sección a otra. La página de inicio es **Usuarios**.
 - Cada sección tiene el **listado** a la izquierda y el **formulario de alta** a la derecha. En pantallas angostas (celulares) el formulario aparece debajo del listado.
-- Después de crear, editar o borrar, la página se recarga sola y el listado muestra los datos actualizados.
+- Después de crear, editar o borrar, **la página no se recarga**: solo se actualiza el listado (o desaparece la fila borrada).
 - Los datos se guardan en la base mientras la aplicación está levantada. Al detenerla con `Ctrl+C` se borran, y la próxima ejecución arranca vacía.
 
 ### Usuarios
@@ -144,14 +146,14 @@ No puede haber dos usuarios con el mismo email.
 
 1. En la fila del usuario, presionar **Editar**. Se despliega un formulario con los datos actuales.
 2. Modificar **nombre** y/o **mail**. El campo **Nueva contraseña** es opcional: si se deja vacío, la contraseña no cambia.
-3. Presionar **Guardar**. Para cerrar el formulario sin guardar, presionar **Editar** de nuevo.
+3. Presionar **Guardar**. El listado se actualiza sin recargar la página. Para cerrar el formulario sin guardar, presionar **Editar** de nuevo.
 
 **Borrar un usuario**
 
-Presionar **Borrar** en la fila del usuario.
+1. Presionar **Borrar** en la fila del usuario.
+2. El navegador pide confirmación (*"Esta seguro que quiere eliminar?"*). Al aceptar, la fila desaparece de la tabla.
 
-- ⚠️ El borrado es **inmediato y sin confirmación**.
-- Los mensajes que escribió ese usuario **no se borran**: quedan sin autor (la columna **Autor** aparece vacía).
+- Los mensajes que escribió ese usuario **no se borran**: quedan sin autor (la columna **Autor** aparece vacía al volver a cargar la sección Mensajes).
 
 ### Mensajes
 
@@ -159,8 +161,8 @@ Presionar **Borrar** en la fila del usuario.
 
 1. Ir a **Mensajes** en la barra de navegación.
 2. En el panel **Crear Mensaje**, completar:
-   - **Usuario**: el **ID** del autor, tal como figura en el listado de Usuarios. Obligatorio.
-   - **Respuesta a mensaje**: el **ID** del mensaje al que se responde. Se deja **vacío** si el mensaje no responde a otro.
+   - **ID usuario**: el **ID** del autor, tal como figura en el listado de Usuarios. Obligatorio.
+   - **ID mensaje respuesta**: el **ID** del mensaje al que se responde. Se deja **vacío** si el mensaje no responde a otro.
    - **Texto**: el contenido del mensaje. Obligatorio.
 3. Presionar **Crear**.
 
@@ -187,36 +189,36 @@ Para reconstruir una conversación, seguir la columna **Respuesta a**: un mensaj
 
 **Borrar un mensaje**
 
-Presionar **Borrar** en la fila del mensaje.
+1. Presionar **Borrar** en la fila del mensaje y aceptar la confirmación.
+2. La fila desaparece de la tabla.
 
-- ⚠️ El borrado es **inmediato y sin confirmación**.
-- Se borran también **todas sus respuestas**, y las respuestas de esas respuestas (borrado en cascada).
+- En la base se borran también **todas sus respuestas**, y las respuestas de esas respuestas (borrado en cascada). Como solo se quita la fila presionada, las respuestas dejan de verse en el listado al volver a cargar la sección **Mensajes**.
 
 ### Errores
 
-Si una acción no se puede realizar, la página muestra un **recuadro rojo** arriba con el motivo, y **los datos no se guardan**. El listado sigue visible debajo.
+Si una acción no se puede realizar, aparece un **recuadro rojo** arriba del contenido con el motivo, **los datos no se guardan** y el listado queda como estaba. La próxima acción exitosa borra el recuadro.
 
 Casos habituales:
 
 | Situación | Qué pasa |
 | :--- | :--- |
-| Campo obligatorio vacío | El navegador no deja enviar el formulario, o se muestra el error (por ejemplo, *"el texto del mensaje es obligatorio"*). |
+| Campo obligatorio vacío | El navegador no deja enviar el formulario. Si igual llega vacío, se muestra el error de validación (por ejemplo, *"el texto del mensaje es obligatorio"*). |
 | Email repetido al crear o editar un usuario | Se muestra un error y el usuario no se guarda. |
-| ID de usuario o de mensaje que no existe | Se muestra un error y el mensaje no se guarda. |
+| ID de usuario o de mensaje que no existe | Se muestra *"el usuario o el mensaje respondido no existen"* y el mensaje no se guarda. |
+| ID no numérico | Se muestra *"ID de usuario invalido"* (o el campo correspondiente). |
 | "Me gusta" negativo | Se muestra *"la cantidad de me gusta no puede ser negativa"*. |
 
-En algunos casos, como un ID inexistente o un email repetido, el texto del error es el que devuelve la base de datos y puede ser técnico.
-
-Después de un error, para seguir usando la aplicación conviene hacer clic en **Usuarios** o **Mensajes** en la barra de navegación. Si se recarga la página con el navegador (`F5`), el navegador ofrece reenviar el formulario fallido.
+Como ya no hay recargas de página, después de un error se puede corregir el formulario y volver a enviarlo directamente.
 
 ### Recorrido de ejemplo
 
-1. En **Usuarios**, crear a *Ana* (`ana@mail.com`) y a *Bruno* (`bruno@mail.com`). Quedan con los ID 1 y 2.
-2. En **Mensajes**, crear un mensaje con **Usuario** `1`, **Respuesta a mensaje** vacío y el texto *"¿Alguien usó templ?"*. Queda con ID 1.
-3. Crear otro con **Usuario** `2`, **Respuesta a mensaje** `1` y el texto *"Sí, en el TP5"*. En el listado aparece con **Respuesta a** = 1.
-4. Presionar **Editar** en el mensaje 2, cambiar **Me gusta** a `3` y **Guardar**.
-5. Volver a **Usuarios** y borrar a *Bruno*. En **Mensajes**, el mensaje 2 sigue existiendo, pero con **Autor** vacío.
-6. Borrar el mensaje 1. Desaparece junto con su respuesta, el mensaje 2.
+1. En **Usuarios**, crear a *Ana* (`ana@mail.com`) y a *Bruno* (`bruno@mail.com`). Quedan con los ID 1 y 2. Cada alta aparece en la tabla sin recargar la página.
+2. En **Mensajes**, crear un mensaje con **ID usuario** `1`, **ID mensaje respuesta** vacío y el texto *"¿Alguien usó templ?"*. Queda con ID 1.
+3. Crear otro con **ID usuario** `2`, **ID mensaje respuesta** `1` y el texto *"Sí, en el TP5"*. En el listado aparece con **Respuesta a** = 1.
+4. Intentar crear un mensaje con **ID usuario** `99`: aparece el recuadro rojo y no se guarda nada.
+5. Presionar **Editar** en el mensaje 2, cambiar **Me gusta** a `3` y **Guardar**.
+6. Volver a **Usuarios** y borrar a *Bruno* (aceptando la confirmación). En **Mensajes**, el mensaje 2 sigue existiendo, pero con **Autor** vacío.
+7. Borrar el mensaje 1. Al volver a cargar **Mensajes**, ya no aparece tampoco su respuesta, el mensaje 2.
 
 ---
 
@@ -265,18 +267,69 @@ Relaciones:
 ## Arquitectura
 
 ```text
-Navegador ──HTTP──▶ webserver (Go, :8080) ──SQL──▶ db (PostgreSQL, :5432)
-                       │
-                       ├── handlers  → leen el formulario y validan (logic)
-                       ├── sqlc      → ejecutan las consultas
-                       └── views     → renderizan el HTML con templ
+Navegador (HTML + HTMX) ──HTTP──▶ webserver (Go, :8080) ──SQL──▶ db (PostgreSQL, :5432)
+                                     │
+                                     ├── handlers  → leen el formulario y validan (logic)
+                                     ├── sqlc      → ejecutan las consultas
+                                     └── views     → renderizan HTML con templ
+                                                     (página completa o solo un fragmento)
 ```
 
-La aplicación sigue un modelo de **renderizado del lado del servidor (SSR)**: el servidor arma el HTML completo con los datos de la base y lo envía al navegador. No se usa JavaScript.
+La aplicación sigue un modelo de **renderizado del lado del servidor (SSR)**: el servidor arma el HTML con los datos de la base y lo envía al navegador.
 
-Los formularios siguen el patrón **PRG (Post / Redirect / Get)**: cada `POST` modifica la base y responde con una redirección `303 See Other` a la página de listado (`GET`). Así, recargar la página no reenvía el formulario.
+- La **primera carga** de cada sección (`GET /usuarios`, `GET /mensajes`) devuelve la página completa (layout + listado + formulario).
+- Las **acciones** (crear, editar, borrar) las envía HTMX por AJAX y el servidor responde **solo con el fragmento de HTML que cambió**. HTMX lo inserta en la página sin recargarla.
+
+No se escribe JavaScript propio: todo el comportamiento dinámico se declara con atributos `hx-*` en los templates. HTMX se carga desde un CDN en el `<head>` del layout.
 
 Los estilos se toman de [Pico CSS](https://picocss.com) (desde CDN) más algunas clases propias definidas en el layout.
+
+---
+
+## Interfaz dinámica con HTMX (TP6)
+
+### Inclusión de la librería
+
+En `views/layout.templ` se agrega, dentro del `<head>`:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.11/dist/htmx.min.js"
+        integrity="sha384-..." crossorigin="anonymous"></script>
+```
+
+Se usa la versión 2 de HTMX con verificación de integridad (SRI).
+
+### Atributos usados
+
+| Dónde | Atributos | Efecto |
+| :--- | :--- | :--- |
+| Formulario de alta (`usuario_form.templ`, `mensaje_form.templ`) | `hx-post="/usuarios"` (o `/mensajes`), `hx-target="#tabla-usuarios"` (o `#tabla-mensajes`), `hx-swap="outerHTML"` | Envía el formulario por AJAX y reemplaza **todo** el contenedor del listado por el que devuelve el servidor. |
+| Formulario de edición en cada fila (`*_list.templ`) | `hx-put="/usuarios/{id}"` (o `/mensajes/{id}`), mismo `hx-target` y `hx-swap="outerHTML"` | Envía la edición con el método `PUT` y reemplaza el listado actualizado. |
+| Botón **Borrar** en cada fila (`*_list.templ`) | `hx-delete="/usuarios/{id}"` (o `/mensajes/{id}`), `hx-target="closest tr"`, `hx-swap="outerHTML"`, `hx-confirm="..."` | Pide confirmación, envía `DELETE` y reemplaza la fila (`<tr>`) por la respuesta vacía del servidor, es decir, la elimina. |
+
+El contenedor del listado (`<section id="tabla-usuarios">` / `<section id="tabla-mensajes">`) existe siempre, aunque la lista esté vacía, para que HTMX siempre tenga un destino donde insertar la respuesta.
+
+### Flujo de una alta
+
+```text
+1. El usuario presiona "Crear".
+2. HTMX envía  POST /usuarios  (nombre, mail, contrasenia) por AJAX.
+3. El handler valida, inserta con sqlc y vuelve a consultar ListUsers.
+4. Responde 200 con dos fragmentos:
+     <div id="alerta" hx-swap-oob="true"></div>      ← limpia la alerta
+     <section id="tabla-usuarios">...</section>      ← listado actualizado
+5. HTMX reemplaza #tabla-usuarios (hx-target + outerHTML) y,
+   por "out-of-band", también reemplaza #alerta.
+```
+
+### Alerta de errores con Out-of-Band swap
+
+El layout tiene un `<div id="alerta">` fijo arriba del contenido. El componente `Alerta(err)` renderiza ese mismo `div` con el atributo `hx-swap-oob="true"`, así que HTMX lo reemplaza **aunque no sea el `hx-target`** de la petición:
+
+- **Acción exitosa:** se envía `Alerta("")` (vacía) junto al fragmento principal, para borrar un error anterior. El CSS `#alerta:empty { display: none; }` la oculta.
+- **Error:** el handler responde `200` con el header `HX-Reswap: none` y solo `Alerta("<mensaje>")`. `HX-Reswap: none` le indica a HTMX que **no toque el target** (el listado y la fila quedan como estaban) y solo se procesa el swap out-of-band de la alerta.
+
+Se responde `200` y no `4xx` en los errores esperados porque HTMX, por defecto, no procesa el cuerpo de respuestas con código de error.
 
 ---
 
@@ -302,14 +355,13 @@ Los estilos se toman de [Pico CSS](https://picocss.com) (desde CDN) más algunas
 │   │       ├── db_mensaje_test.go
 │   │       └── db_usuarios_test.go
 │   ├── <strong>handlers</strong>
-│   │   ├── usuarios_web.go       # Handlers de las páginas web (usuarios y mensajes)
-│   │   ├── usuarios.go           # Handlers de la API JSON del TP3 (sin rutas registradas)
-│   │   └── mensajes.go           # Handlers de la API JSON del TP3 (sin rutas registradas)
+│   │   ├── usuarios_web.go       # Handlers web de usuarios (página, alta, edición, borrado)
+│   │   └── mensajes_web.go       # Handlers web de mensajes (página, alta, edición, borrado)
 │   └── <strong>logic</strong>
 │       ├── usuarios.go           # Validaciones de negocio de usuarios
 │       └── mensajes.go           # Validaciones de negocio de mensajes
 ├── <strong>views</strong>                     # Templates templ (los *_templ.go se generan)
-│   ├── layout.templ
+│   ├── layout.templ              # Layout común + componente Alerta
 │   ├── usuarios_page.templ
 │   ├── usuario_list.templ
 │   ├── usuario_form.templ
@@ -324,9 +376,9 @@ Los estilos se toman de [Pico CSS](https://picocss.com) (desde CDN) más algunas
 └── sqlc.yaml
 </pre>
 
-- **`cmd/server`**: archivo principal del servidor; abre la conexión y asocia cada ruta con su handler.
+- **`cmd/server`**: archivo principal del servidor; abre la conexión y asocia cada ruta y método HTTP con su handler.
 - **`internal/db`**: todo lo asociado a la base de datos: conexión, esquema, consultas, código generado y tests de persistencia.
-- **`internal/handlers`**: reciben cada petición HTTP, leen el formulario, llaman a la validación y a sqlc, y responden con una vista o una redirección.
+- **`internal/handlers`**: reciben cada petición HTTP, leen el formulario o la URL, llaman a la validación y a sqlc, y responden con la página completa o con un fragmento de HTML para HTMX.
 - **`internal/logic`**: reglas de negocio, como la verificación de campos vacíos o de valores negativos.
 - **`views`**: templates de templ que generan el HTML.
 
@@ -336,34 +388,36 @@ Los archivos generados (`internal/db/sqlc/*.go` y `views/*_templ.go`) están en 
 
 ## Rutas de la aplicación
 
-Todas las rutas devuelven HTML o redirigen. Los `POST` reciben los datos como formulario (`application/x-www-form-urlencoded`).
+Los `POST` y `PUT` reciben los datos como formulario (`application/x-www-form-urlencoded`), enviados por HTMX. Cualquier otra ruta devuelve `404`, y un método no soportado en una ruta existente devuelve `405`.
 
 ### Usuarios
 
 | Método | Ruta | Handler | Qué hace | Respuesta |
 | :--- | :--- | :--- | :--- | :--- |
-| `GET` | `/` | `UsuariosPageHandler` | Página de inicio: muestra la gestión de usuarios. | Vista `UsuariosPage` |
-| `GET` | `/usuarios` | `UsuariosPageHandler` | Lista los usuarios y muestra el formulario de alta. | Vista `UsuariosPage` |
-| `POST` | `/usuarios` | `CrearUsuarioWebHandler` | Crea un usuario (`nombre`, `mail`, `contrasenia`). | `303` → `/usuarios` |
-| `POST` | `/usuarios/editar` | `EditarUsuarioWebHandler` | Edita nombre y mail. Si la contraseña viene vacía, no se modifica. | `303` → `/usuarios` |
-| `POST` | `/usuarios/eliminar` | `EliminarUsuarioWebHandler` | Elimina el usuario. Sus mensajes quedan sin autor. | `303` → `/usuarios` |
+| `GET` | `/` | `UsuariosPageHandler` | Página de inicio: muestra la gestión de usuarios. | Página completa `UsuariosPage` |
+| `GET` | `/usuarios` | `UsuariosPageHandler` | Lista los usuarios y muestra el formulario de alta. | Página completa `UsuariosPage` |
+| `POST` | `/usuarios` | `CrearUsuarioWebHandler` | Crea un usuario (`nombre`, `mail`, `contrasenia`). | Fragmento `UsuarioList` + `Alerta` vacía (OOB) |
+| `PUT` | `/usuarios/{id}` | `EditarUsuarioWebHandler` | Edita nombre y mail. Si la contraseña viene vacía, no se modifica. | Fragmento `UsuarioList` + `Alerta` vacía (OOB) |
+| `DELETE` | `/usuarios/{id}` | `EliminarUsuarioWebHandler` | Elimina el usuario. Sus mensajes quedan sin autor. | `200` sin contenido principal (la fila desaparece) + `Alerta` vacía (OOB) |
 
 ### Mensajes
 
 | Método | Ruta | Handler | Qué hace | Respuesta |
 | :--- | :--- | :--- | :--- | :--- |
-| `GET` | `/mensajes` | `MensajesPageHandler` | Lista los mensajes y muestra el formulario de alta. | Vista `MensajesPage` |
-| `POST` | `/mensajes` | `CrearMensajeWebHandler` | Crea un mensaje (`usuario`, `texto` y opcionalmente `respuesta`). Verifica que el usuario exista. | `303` → `/mensajes` |
-| `POST` | `/mensajes/editar` | `EditarMensajeWebHandler` | Edita autor, mensaje al que responde, texto y me gusta. Un campo vacío se guarda como `NULL`. | `303` → `/mensajes` |
-| `POST` | `/mensajes/eliminar` | `EliminarMensajeWebHandler` | Elimina el mensaje y, en cascada, sus respuestas. | `303` → `/mensajes` |
+| `GET` | `/mensajes` | `MensajesPageHandler` | Lista los mensajes y muestra el formulario de alta. | Página completa `MensajesPage` |
+| `POST` | `/mensajes` | `CrearMensajeWebHandler` | Crea un mensaje (`usuario`, `texto` y opcionalmente `respuesta`). | Fragmento `MensajeList` + `Alerta` vacía (OOB) |
+| `PUT` | `/mensajes/{id}` | `EditarMensajeWebHandler` | Edita autor, mensaje al que responde, texto y me gusta. Un campo vacío se guarda como `NULL`. | Fragmento `MensajeList` + `Alerta` vacía (OOB) |
+| `DELETE` | `/mensajes/{id}` | `EliminarMensajeWebHandler` | Elimina el mensaje y, en cascada, sus respuestas. | `200` sin contenido principal (la fila desaparece) + `Alerta` vacía (OOB) |
 
-Las rutas de edición y eliminación usan `POST` porque los formularios HTML solo admiten `GET` y `POST`. El identificador viaja en un campo oculto del formulario (`id_usuario` o `id_mensaje`).
+Ante un error de validación o de base de datos, `POST`, `PUT` y `DELETE` responden `200` con el header `HX-Reswap: none` y solo el fragmento `Alerta` con el mensaje (ver [Manejo de errores](#manejo-de-errores)).
+
+En `DELETE` el `{id}` se toma de la URL. En `PUT` el formulario de edición envía además el ID en un campo oculto (`id_usuario` o `id_mensaje`), que es el que usa el handler.
 
 ---
 
 ## Vistas (templates templ)
 
-Las vistas están en la carpeta `views/`. Cada archivo `.templ` define un componente que `make generate` convierte en una función Go (por ejemplo, `UsuariosPage(...)`). Las páginas se arman por composición: una **página** usa el **layout** y dentro coloca una **lista** y un **formulario**.
+Las vistas están en la carpeta `views/`. Cada archivo `.templ` define un componente que `make generate` convierte en una función Go (por ejemplo, `UsuariosPage(...)`). Las páginas se arman por composición: una **página** usa el **layout** y dentro coloca una **lista** y un **formulario**. Las listas también se renderizan **solas**, como fragmento, en las respuestas a HTMX.
 
 ```text
 UsuariosPage                         MensajesPage
@@ -374,21 +428,25 @@ UsuariosPage                         MensajesPage
 
 | Template | Componente | ¿Para qué sirve? | ¿Qué rutas satisface? |
 | :--- | :--- | :--- | :--- |
-| `layout.templ` | `Layout(title, err)` | Estructura HTML común a todas las páginas: `<head>` con Pico CSS y estilos propios, barra de navegación (Usuarios / Mensajes) y, si `err` no está vacío, un recuadro de alerta con el error. El contenido de cada página se inserta con `children`. | Todas las páginas, de forma indirecta, a través de `UsuariosPage` y `MensajesPage`. |
-| `usuarios_page.templ` | `UsuariosPage(usuarios, err)` | Página completa de gestión de usuarios: título y grilla con el listado y el formulario de alta, dentro del layout. | `GET /` y `GET /usuarios`. |
-| `usuario_list.templ` | `UsuarioList(usuarios)` | Tabla de usuarios (ID, nombre, mail). Cada fila tiene un formulario desplegable para **editar** y un botón para **borrar**. | Se muestra en `GET /` y `GET /usuarios`. Sus formularios envían a `POST /usuarios/editar` y `POST /usuarios/eliminar`. |
-| `usuario_form.templ` | `UsuarioForm()` | Formulario de alta de usuario (nombre, email, contraseña). | Se muestra en `GET /` y `GET /usuarios`. Envía a `POST /usuarios`. |
-| `mensajes_page.templ` | `MensajesPage(mensajes, err)` | Página completa de gestión de mensajes: título y grilla con el listado y el formulario de alta, dentro del layout. Recibe el texto de error para mostrarlo en la alerta. | `GET /mensajes`. También se renderiza con el error cuando falla `POST /mensajes`, `POST /mensajes/editar` o `POST /mensajes/eliminar`. |
-| `mensaje_list.templ` | `MensajeList(mensajes)` | Tabla de mensajes (ID, autor, respuesta a, texto, me gusta). Los valores `NULL` se muestran como celda vacía. Cada fila tiene un formulario desplegable para **editar** y un botón para **borrar**. | Se muestra en `GET /mensajes`. Sus formularios envían a `POST /mensajes/editar` y `POST /mensajes/eliminar`. |
-| `mensaje_form.templ` | `MensajeForm()` | Formulario de alta de mensaje: ID del autor, ID del mensaje al que responde (opcional) y texto. | Se muestra en `GET /mensajes`. Envía a `POST /mensajes`. |
+| `layout.templ` | `Layout(title)` | Estructura HTML común: `<head>` con Pico CSS, estilos propios y el script de **HTMX**; barra de navegación (Usuarios / Mensajes) y el contenedor `<div id="alerta">`. El contenido de cada página se inserta con `children`. | Todas las páginas, a través de `UsuariosPage` y `MensajesPage`. |
+| `layout.templ` | `Alerta(err)` | Renderiza `<div id="alerta" hx-swap-oob="true">` con el mensaje de error, o vacío. HTMX lo usa para actualizar la alerta "fuera de banda". | Todas las respuestas de `POST`, `PUT` y `DELETE`. |
+| `usuarios_page.templ` | `UsuariosPage(usuarios)` | Página completa de gestión de usuarios: título y grilla con el listado y el formulario de alta, dentro del layout. | `GET /` y `GET /usuarios`. |
+| `usuario_list.templ` | `UsuarioList(usuarios)` | `<section id="tabla-usuarios">` con la tabla de usuarios (ID, nombre, mail). Cada fila tiene un formulario desplegable para **editar** (`hx-put`) y un botón para **borrar** (`hx-delete`). | Dentro de `GET /` y `GET /usuarios`; sola como respuesta de `POST /usuarios` y `PUT /usuarios/{id}`. |
+| `usuario_form.templ` | `UsuarioForm()` | Formulario de alta de usuario (nombre, email, contraseña) con `hx-post`. | Se muestra en `GET /` y `GET /usuarios`. Envía a `POST /usuarios`. |
+| `mensajes_page.templ` | `MensajesPage(mensajes)` | Página completa de gestión de mensajes, dentro del layout. | `GET /mensajes`. |
+| `mensaje_list.templ` | `MensajeList(mensajes)` | `<section id="tabla-mensajes">` con la tabla de mensajes (ID, autor, respuesta a, texto, me gusta). Los valores `NULL` se muestran como celda vacía. Cada fila tiene un formulario desplegable para **editar** y un botón para **borrar**. | Dentro de `GET /mensajes`; sola como respuesta de `POST /mensajes` y `PUT /mensajes/{id}`. |
+| `mensaje_form.templ` | `MensajeForm()` | Formulario de alta de mensaje con `hx-post`: ID del autor, ID del mensaje al que responde (opcional) y texto. | Se muestra en `GET /mensajes`. Envía a `POST /mensajes`. |
 
 ---
 
 ## Manejo de errores
 
-- **Validación de negocio** (`internal/logic`): campos obligatorios vacíos, `me_gusta` negativo, identificadores menores o iguales a 0, etc.
+- **Validación de negocio** (`internal/logic`): campos obligatorios vacíos, `me_gusta` negativo, identificadores menores o iguales a 0, etc. El mensaje de la validación se muestra al usuario.
+- **Validación de formato** (handlers): IDs que no son números.
 - **Integridad de los datos**: las restricciones de la base impiden guardar un mensaje con un usuario o un mensaje respondido inexistentes (claves foráneas) y un usuario con un email repetido (`UNIQUE`).
-- **Cómo se informa**: en ambas secciones el error se muestra en la misma página, en un recuadro de alerta del layout (componente `Layout`, parámetro `err`), junto con el listado. Ver también [Errores](#errores) en el uso de la aplicación.
+- **Cómo se informa**: el handler responde `200` con el header `HX-Reswap: none` y el componente `Alerta(mensaje)`, que HTMX inserta en `#alerta` por *out-of-band swap* sin modificar el listado ni la fila. Ver [Alerta de errores con Out-of-Band swap](#alerta-de-errores-con-out-of-band-swap).
+- **Errores inesperados** (por ejemplo, que falle la consulta del listado): se responde `500 Internal Server Error`.
+- **Arranque**: si el servidor no puede conectarse a la base, termina con código de salida `1`.
 
 ---
 
@@ -442,8 +500,11 @@ Genera el código, levanta la base y corre `go test -v ./internal/db/tests` en u
 
 Con la aplicación levantada (`make up`), en **http://localhost:8080**. El paso a paso detallado está en [Recorrido de ejemplo](#recorrido-de-ejemplo).
 
-1. En **Usuarios**, crear uno o más usuarios.
+1. En **Usuarios**, crear uno o más usuarios. Verificar que aparecen en la tabla **sin que la página se recargue**.
 2. En **Mensajes**, crear un mensaje indicando el ID de un usuario existente.
-3. Crear otro mensaje completando "Respuesta a mensaje" con el ID del anterior.
-4. Usar **Editar** y **Borrar** en cada tabla. Tras cada acción, la página se recarga con los datos actualizados.
-5. Probar casos inválidos, como crear un mensaje con un ID de usuario inexistente. Se muestra un error en lugar de guardar el dato.
+3. Crear otro mensaje completando "ID mensaje respuesta" con el ID del anterior.
+4. Usar **Editar** en cada tabla: el listado se actualiza en el lugar.
+5. Usar **Borrar**: aparece la confirmación y, al aceptar, la fila desaparece.
+6. Probar casos inválidos, como crear un mensaje con un ID de usuario inexistente. Aparece el recuadro rojo y el listado no cambia.
+
+Para comprobar que no hay recargas completas, abrir las herramientas de desarrollo del navegador (pestaña **Red / Network**): cada acción genera una única petición `fetch/xhr` cuya respuesta es solo un fragmento de HTML.

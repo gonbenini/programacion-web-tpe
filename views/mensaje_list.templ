@@ -72,6 +72,7 @@ templ MensajeList(mensajes []sqlc.Mensaje) {
 										<button type="submit" class="contrast"
 											hx-delete={ fmt.Sprintf("/mensajes/%d", m.IDMensaje) }
 											hx-target="closest tr"
+											hx-swap="outerHTML"
 											hx-confirm="Esta seguro que quiere eliminar?">
 											
 											Borrar

@@ -446,7 +446,7 @@ UsuariosPage                         MensajesPage
 - **Integridad de los datos**: las restricciones de la base impiden guardar un mensaje con un usuario o un mensaje respondido inexistentes (claves foráneas) y un usuario con un email repetido (`UNIQUE`).
 - **Cómo se informa**: el handler responde `200` con el header `HX-Reswap: none` y el componente `Alerta(mensaje)`, que HTMX inserta en `#alerta` por *out-of-band swap* sin modificar el listado ni la fila. Ver [Alerta de errores con Out-of-Band swap](#alerta-de-errores-con-out-of-band-swap).
 - **Errores inesperados** (por ejemplo, que falle la consulta del listado): se responde `500 Internal Server Error`.
-- **Arranque**: si el servidor no puede conectarse a la base, termina con código de salida `1`.
+- **Arranque**: si el servidor no puede conectarse a la base, muestra el error en la consola y termina.
 
 ---
 

@@ -19,7 +19,7 @@ func UsuariosPageHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Q
 
 	usuarios, err := queries.ListUsers(r.Context())
 	if err != nil {
-		http.Error(w, "Error al obtener usuarios", http.StatusMethodNotAllowed)
+		http.Error(w, "Error al obtener usuarios", http.StatusInternalServerError)
 		return
 	}
 
@@ -30,7 +30,7 @@ func UsuariosPageHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Q
 }
 
 func CrearUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
-	// Crea el usuario con CreateUser y redirige a GET
+	// Crea el usuario con CreateUser y devuelve la lista actualizada (fragmento HTMX)
 
 	if r.Method != http.MethodPost {
 		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
@@ -51,7 +51,7 @@ func CrearUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 	if err := logic.ValidarUsuario(nuevo); err != nil {
 		w.Header().Set("HX-Reswap", "none")
 		w.WriteHeader(http.StatusOK)
-		views.Alerta("Error al crear usuario").Render(r.Context(), w)
+		views.Alerta("Error al crear usuario: "+err.Error()).Render(r.Context(), w)
 		return
 	}
 
@@ -63,19 +63,23 @@ func CrearUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 	if err != nil {
 		w.Header().Set("HX-Reswap", "none")
 		w.WriteHeader(http.StatusOK)
-		views.Alerta("Error al crear usuario: Correo electronico duplicado").Render(r.Context(), w)
+		views.Alerta("Error al crear usuario: el mail ya está registrado o los datos son inválidos").Render(r.Context(), w)
 		return
 	}
 
+	users, err := queries.ListUsers(r.Context())
+	if err != nil {
+		http.Error(w, "Error al obtener la lista de usuarios", http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	views.Alerta("").Render(r.Context(), w)
-	users, err := queries.ListUsers(r.Context())
 	views.UsuarioList(users).Render(r.Context(), w)
 }
 
 func EditarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
-	//Actualiza un usuario y redirige a GET
+	// Actualiza un usuario y devuelve la lista actualizada (fragmento HTMX)
 	if r.Method != http.MethodPut {
 		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
 		return
@@ -90,7 +94,7 @@ func EditarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 	if err != nil {
 		w.Header().Set("HX-Reswap", "none")
 		w.WriteHeader(http.StatusOK)
-		views.Alerta("Error al crear usuario: ID no valido").Render(r.Context(), w)
+		views.Alerta("Error al actualizar usuario: ID no valido").Render(r.Context(), w)
 		return
 	}
 
@@ -109,7 +113,7 @@ func EditarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 	if err := logic.ValidarUpdateUsuario(reqUpdate); err != nil {
 		w.Header().Set("HX-Reswap", "none")
 		w.WriteHeader(http.StatusOK)
-		views.Alerta("Error al actualizar usuario").Render(r.Context(), w)
+		views.Alerta("Error al actualizar usuario: "+err.Error()).Render(r.Context(), w)
 		return
 	}
 
@@ -136,19 +140,19 @@ func EditarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	views.Alerta("").Render(r.Context(), w)
 	users, err := queries.ListUsers(r.Context())
 	if err != nil {
 		http.Error(w, "Error al obtener la lista de usuarios", http.StatusInternalServerError)
 		return
 	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	views.Alerta("").Render(r.Context(), w)
 	views.UsuarioList(users).Render(r.Context(), w)
 }
 
 func EliminarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
-	// Elimina el usuario y redirige a GET
+	// Elimina el usuario y devuelve una respuesta vacía para que HTMX quite la fila
 
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)

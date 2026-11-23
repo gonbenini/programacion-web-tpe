@@ -11,7 +11,7 @@ import (
 )
 
 func MensajesPageHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
-	// Obtiene la lista con ListUsers y renderiza la vista completa
+	// Obtiene la lista con ListMensajes y renderiza la vista completa
 
 	if r.Method != http.MethodGet {
 		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
@@ -20,7 +20,7 @@ func MensajesPageHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Q
 
 	mensajes, err := queries.ListMensajes(r.Context())
 	if err != nil {
-		http.Error(w, "Error al obtener mensajes", http.StatusMethodNotAllowed)
+		http.Error(w, "Error al obtener mensajes", http.StatusInternalServerError)
 		return
 	}
 
@@ -31,7 +31,7 @@ func MensajesPageHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Q
 }
 
 func CrearMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
-	// Crea el mensaje con CreateMensaje y redirige a GET
+	// Crea el mensaje con CreateMensaje y devuelve la lista actualizada (fragmento HTMX)
 	if r.Method != http.MethodPost {
 		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
 		return
@@ -82,7 +82,7 @@ func CrearMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 	if err := logic.ValidarMensaje(req); err != nil {
 		w.Header().Set("HX-Reswap", "none")
 		w.WriteHeader(http.StatusOK)
-		views.Alerta("Error al crear mensaje").Render(r.Context(), w)
+		views.Alerta("Error al crear mensaje: "+err.Error()).Render(r.Context(), w)
 		return
 	}
 
@@ -94,7 +94,7 @@ func CrearMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 	if err != nil {
 		w.Header().Set("HX-Reswap", "none")
 		w.WriteHeader(http.StatusOK)
-		views.Alerta("Error al crear mensaje").Render(r.Context(), w)
+		views.Alerta("Error al crear mensaje: el usuario o el mensaje respondido no existen").Render(r.Context(), w)
 		return
 	}
 
@@ -110,7 +110,7 @@ func CrearMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 }
 
 func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
-	//Actualiza un usuario y redirige a GET
+	// Actualiza un mensaje y devuelve la lista actualizada (fragmento HTMX)
 	if r.Method != http.MethodPut {
 		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
 		return
@@ -123,7 +123,9 @@ func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 
 	id64, err := strconv.ParseInt(r.FormValue("id_mensaje"), 10, 32)
 	if err != nil {
-		http.Error(w, "Error al parsear el ID del mensaje", http.StatusInternalServerError)
+		w.Header().Set("HX-Reswap", "none")
+		w.WriteHeader(http.StatusOK)
+		views.Alerta("ID de mensaje invalido").Render(r.Context(), w)
 		return
 	}
 
@@ -202,7 +204,7 @@ func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 	if err := logic.ValidarEdicionMensaje(reqUpdate); err != nil {
 		w.Header().Set("HX-Reswap", "none")
 		w.WriteHeader(http.StatusOK)
-		views.Alerta("Error al actualizar mensaje").Render(r.Context(), w)
+		views.Alerta("Error al actualizar mensaje: "+err.Error()).Render(r.Context(), w)
 		return
 	}
 
@@ -217,7 +219,7 @@ func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 	if err != nil {
 		w.Header().Set("HX-Reswap", "none")
 		w.WriteHeader(http.StatusOK)
-		views.Alerta("Error al actualizar mensaje").Render(r.Context(), w)
+		views.Alerta("Error al actualizar mensaje: el usuario o el mensaje respondido no existen").Render(r.Context(), w)
 		return
 	}
 	

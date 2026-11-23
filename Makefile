@@ -1,4 +1,4 @@
-.PHONY: generate up down clean # Dado que estos son los comandos que queremos automatizar nosotros para operar la app, esta linea se agrega para que no interprete que estos comandos viviran en carpetas. Sino que estaran defindos ahi. En caso que no este este comando y existiera una carpeta clean, al llaar a make, se iria a buscar ahi a esa carpeta, que si tiene otra cosa daria error.
+.PHONY: generate up down clean test # Dado que estos son los comandos que queremos automatizar nosotros para operar la app, esta linea se agrega para que no interprete que estos comandos viviran en carpetas. Sino que estaran defindos ahi. En caso que no este este comando y existiera una carpeta clean, al llaar a make, se iria a buscar ahi a esa carpeta, que si tiene otra cosa daria error.
 # poner @ antes del comando evita que se imprima el comando
 
 # 1.	Genera el código de Go leyendo el schema y queries antes de que Docker Compose se levante, los contenedores dependen de estos assets.
@@ -42,7 +42,7 @@ down:
 #					-fdx: en cambio poner -f en vez de -n, confirma el borrado. git por defecto pide confirmacion para esto, sino se niega.
 # Borro los archivos desde adentro de un contenedor para no tener que hacer sudo
 clean:
-	echo "Se van a borrar los siguientes archivos:"
+	@echo "Se van a borrar los siguientes archivos:"
 	@git clean -ndx | awk '{print $3}'
 	@docker compose run --rm webserver rm -rf internal/db/sqlc >/dev/null 2>&1
 	@-git clean -fdx >/dev/null 2>&1
@@ -59,14 +59,3 @@ test: generate
 # Al usar --rm, el contenedor efímero donde corrieron los tests se elimina automáticamente al terminar.
 # Respecto al comando `go test -v ./`, es una herramienta nativa de go que ejecuta los test.
 # Lo que hace es buscar archivos cuyos nombres terminen en _test.go y ejecuta las funciones que tenga. -v es verbose, el primer `./` es para que empiece a buscar de la carpeta actual.
-
-test-api: generate
-	@docker compose up -d --wait
-	# esperando inicializacion de servicios
-	@until docker compose exec -T db pg_isready -U dbuser -d foro > /dev/null 2>&1; do sleep 1; done # esperamos qu ela db este levantada
-	@until curl -fs http://localhost:8080/api/usuarios > /dev/null; do sleep 1; done
-	@./requests.sh
-	@docker compose stop >/dev/null 2>&1
-	@$(MAKE) down >/dev/null 2>&1
-
-# Es buena practica en vez de hacer `@make down &>/dev/null`, usar `$(MAKE)

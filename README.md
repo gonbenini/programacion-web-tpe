@@ -528,3 +528,5 @@ Con la aplicación levantada (`make up`), en **http://localhost:8080**. El paso 
 6. Probar casos inválidos, como crear un mensaje con un ID de usuario inexistente. Aparece el recuadro rojo y el listado no cambia.
 
 Para comprobar que no hay recargas completas, abrir las herramientas de desarrollo del navegador (pestaña **Red / Network**): cada acción genera una única petición `fetch/xhr` cuya respuesta es solo un fragmento de HTML.
+
+Para realizar testeos sobre la interfaz web se corre `make up`

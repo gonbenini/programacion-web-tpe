@@ -30,7 +30,8 @@ func UsuariosPageHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Q
 }
 
 func CrearUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
-	// Crea el usuario con CreateUser y redirige a GET
+	// Crea el usuario y obtiene solo la lista actualizada para su renderizado.
+	// En caso de error renderiza un mensaje de alerta y no actualiza la lista de usuarios.
 
 	if r.Method != http.MethodPost {
 		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
@@ -75,7 +76,8 @@ func CrearUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 }
 
 func EditarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
-	//Actualiza un usuario y redirige a GET
+	// Actualiza el usuario con CreateUser y obtiene solo la lista actualiza para su renderizado.
+	// En caso de error renderiza un mensaje de alerta y no actualiza la lista de usuarios.
 	if r.Method != http.MethodPut {
 		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
 		return
@@ -148,7 +150,8 @@ func EditarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 }
 
 func EliminarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
-	// Elimina el usuario y redirige a GET
+	// Elimina el usuario y solo se quita la fila del DOM desde el target,
+	// no se renderiza la lista completa de usuarios
 
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)

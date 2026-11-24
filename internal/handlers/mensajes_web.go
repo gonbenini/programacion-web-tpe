@@ -31,7 +31,9 @@ func MensajesPageHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Q
 }
 
 func CrearMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
-	// Crea el mensaje con CreateMensaje y redirige a GET
+	// Crea el mensaje con CreateMensaje y obtiene solo la lista actualiza
+	// de mensajes y renderiza la lista de mensajes en caso de exito,
+	// en caso de error renderiza un mensaje de alerta y no actualiza la lista de mensajes
 	if r.Method != http.MethodPost {
 		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
 		return
@@ -110,7 +112,8 @@ func CrearMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 }
 
 func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
-	//Actualiza un usuario y redirige a GET
+	//Actualiza un usuario y renderiza la lista de mensajes actualizada en caso de exito,
+	//en caso de error renderiza un mensaje de alerta y no actualiza la lista de mensajes
 	if r.Method != http.MethodPut {
 		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
 		return
@@ -233,7 +236,7 @@ func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 }
 
 func EliminarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
-	// Elimina el mensaje
+	// Elimina el mensaje y se actualiza el DOM quitando la fila desde el target
 
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)

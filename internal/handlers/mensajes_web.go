@@ -1,12 +1,12 @@
 package handlers
 
 import (
-	"net/http"
-	"strconv"
+	"database/sql"
 	sqlc "foro/internal/db/sqlc"
 	"foro/internal/logic"
 	"foro/views"
-	"database/sql"
+	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -31,12 +31,14 @@ func MensajesPageHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Q
 }
 
 func CrearMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
-	// Crea el mensaje con CreateMensaje y devuelve la lista actualizada (fragmento HTMX)
+	// Crea el mensaje con CreateMensaje, obtiene solo la lista actualizada de mensajes
+	// y renderiza la lista de mensajes en caso de exito.
+	// En caso de error rendeiza un mensaje de alerta y no actualiza la lista de mensajes.
 	if r.Method != http.MethodPost {
 		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
 		return
 	}
-	
+
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "Error al procesar el formulario", http.StatusBadRequest)
 		return
@@ -87,9 +89,9 @@ func CrearMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 	}
 
 	_, err = queries.CreateMensaje(r.Context(), sqlc.CreateMensajeParams{
-		IDUsuario: sql.NullInt32{Int32: req.IdUsuario, Valid: true,},
+		IDUsuario:           sql.NullInt32{Int32: req.IdUsuario, Valid: true},
 		IDRespuestaAMensaje: respuestaSQL,
-		Texto: req.Texto,
+		Texto:               req.Texto,
 	})
 	if err != nil {
 		w.Header().Set("HX-Reswap", "none")
@@ -110,7 +112,8 @@ func CrearMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 }
 
 func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
-	// Actualiza un mensaje y devuelve la lista actualizada (fragmento HTMX)
+	// Actualiza un mensaje y renderiza la lista de mensajes actualizada en caso de exito.
+	// En caso de error renderiza un mensaje de alerta y no actualiza la lista de mensajes.
 	if r.Method != http.MethodPut {
 		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
 		return
@@ -195,10 +198,10 @@ func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 	texto := r.FormValue("texto")
 
 	reqUpdate := logic.EditarMensaje{
-		IdUsuario: usuario,
+		IdUsuario:           usuario,
 		IdRespuestaAMensaje: respuesta,
-		Texto: &texto,
-		MeGusta: meGusta,
+		Texto:               &texto,
+		MeGusta:             meGusta,
 	}
 
 	if err := logic.ValidarEdicionMensaje(reqUpdate); err != nil {
@@ -209,11 +212,11 @@ func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 	}
 
 	err = queries.UpdateMensaje(r.Context(), sqlc.UpdateMensajeParams{
-		IDMensaje: int32(id64),
-		IDUsuario: usuarioSQL,
+		IDMensaje:           int32(id64),
+		IDUsuario:           usuarioSQL,
 		IDRespuestaAMensaje: respuestaSQL,
-		Texto: texto,
-		MeGusta: meGustaSQL,
+		Texto:               texto,
+		MeGusta:             meGustaSQL,
 	})
 
 	if err != nil {
@@ -222,7 +225,7 @@ func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 		views.Alerta("Error al actualizar mensaje: el usuario o el mensaje respondido no existen").Render(r.Context(), w)
 		return
 	}
-	
+
 	mensajes, err := queries.ListMensajes(r.Context())
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -235,7 +238,8 @@ func EditarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sq
 }
 
 func EliminarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
-	// Elimina el mensaje
+	// Elimina el mensaje y se actualiza el DOM quitando la fila mediante HTMX.
+	// En caso de error renderiza un mensaje de alerta y no actualiza la lista de mensajes.
 
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
@@ -247,7 +251,7 @@ func EliminarMensajeWebHandler(w http.ResponseWriter, r *http.Request, queries *
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	id64 ,err := strconv.Atoi(parts[2])
+	id64, err := strconv.Atoi(parts[2])
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return

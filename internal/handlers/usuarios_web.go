@@ -1,11 +1,11 @@
 package handlers
 
 import (
-	"net/http"
-	"strconv"
 	sqlc "foro/internal/db/sqlc"
 	"foro/internal/logic"
 	"foro/views"
+	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -30,7 +30,8 @@ func UsuariosPageHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Q
 }
 
 func CrearUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
-	// Crea el usuario con CreateUser y devuelve la lista actualizada (fragmento HTMX)
+	// Crea el usuario con CreateUser y obtiene solo la lista actualizada para su renderizado.
+	// En caso de error renderiza un mensaje de alerta y no actualiza la lista de usuarios.
 
 	if r.Method != http.MethodPost {
 		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
@@ -79,7 +80,8 @@ func CrearUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sql
 }
 
 func EditarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *sqlc.Queries) {
-	// Actualiza un usuario y devuelve la lista actualizada (fragmento HTMX)
+	// Actualiza el usuario y obtiene solo la lista actualizada para su renderizado.
+	// En caso de error renderiza un mensaje de alerta y no actualiza la lista de usuarios.
 	if r.Method != http.MethodPut {
 		http.Error(w, "Método no permitido", http.StatusMethodNotAllowed)
 		return
@@ -164,7 +166,7 @@ func EliminarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	id64 ,err := strconv.Atoi(parts[2])
+	id64, err := strconv.Atoi(parts[2])
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -176,7 +178,7 @@ func EliminarUsuarioWebHandler(w http.ResponseWriter, r *http.Request, queries *
 		views.Alerta("Error al eliminar usuario").Render(r.Context(), w)
 		return
 	}
-	
+
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	views.Alerta("").Render(r.Context(), w)

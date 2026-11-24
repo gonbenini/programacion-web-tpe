@@ -1,4 +1,4 @@
-# 🌐 Trabajo Práctico Especial — Programación Web
+# Trabajo Práctico Especial — Programación Web
 
 <p align="center">
   <strong>Ingeniería de Sistemas · UNICEN</strong><br>
@@ -16,7 +16,7 @@ El objetivo es desarrollar una aplicación web a partir de un dominio simple, ap
 
 ---
 
-## 📑 Índice
+## Índice
 
 - [Ejecución rápida](#-ejecución-rápida)
 - [Requisitos](#requisitos)
@@ -42,7 +42,7 @@ El objetivo es desarrollar una aplicación web a partir de un dominio simple, ap
 
 ---
 
-## 🚀 Ejecución rápida
+## Ejecución rápida
 
 ```bash
 git clone <url-del-repositorio>
